@@ -1,0 +1,90 @@
+# CMakeLists.txt для модуля {PATTERN_NAME} с анализом безопасности
+cmake_minimum_required(VERSION 3.16)
+
+# Настройка стандарта C++
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Подключение общих утилит
+add_subdirectory(../../common common)
+
+# ----------------------------------------------------------------------------
+# ОСНОВНЫЕ ЦЕЛИ ДЛЯ ИЗУЧЕНИЯ ПАТТЕРНА
+# ----------------------------------------------------------------------------
+
+# Классический {PATTERN_NAME}
+add_executable({pattern}_pattern {pattern}_pattern.cpp)
+target_link_libraries({pattern}_pattern common)
+
+# Современный {PATTERN_NAME}
+add_executable(modern_{pattern} modern_{pattern}.cpp)
+target_link_libraries(modern_{pattern} common)
+
+# ----------------------------------------------------------------------------
+# ЦЕЛИ ДЛЯ АНАЛИЗА БЕЗОПАСНОСТИ
+# ----------------------------------------------------------------------------
+
+# Уязвимые реализации {PATTERN_NAME}
+add_executable({pattern}_vulnerabilities {pattern}_vulnerabilities.cpp)
+target_link_libraries({pattern}_vulnerabilities common)
+
+# Версия с ThreadSanitizer для обнаружения race conditions
+add_executable({pattern}_vulnerabilities_tsan {pattern}_vulnerabilities.cpp)
+target_compile_options({pattern}_vulnerabilities_tsan PRIVATE -fsanitize=thread -fno-omit-frame-pointer -g)
+target_link_options({pattern}_vulnerabilities_tsan PRIVATE -fsanitize=thread)
+target_link_libraries({pattern}_vulnerabilities_tsan common)
+
+# Версия с AddressSanitizer для обнаружения use-after-free
+add_executable({pattern}_vulnerabilities_asan {pattern}_vulnerabilities.cpp)
+target_compile_options({pattern}_vulnerabilities_asan PRIVATE -fsanitize=address -fno-omit-frame-pointer -g)
+target_link_options({pattern}_vulnerabilities_asan PRIVATE -fsanitize=address)
+target_link_libraries({pattern}_vulnerabilities_asan common)
+
+# Версия с UndefinedBehaviorSanitizer для обнаружения undefined behavior
+add_executable({pattern}_vulnerabilities_ubsan {pattern}_vulnerabilities.cpp)
+target_compile_options({pattern}_vulnerabilities_ubsan PRIVATE -fsanitize=undefined -fno-omit-frame-pointer -g)
+target_link_options({pattern}_vulnerabilities_ubsan PRIVATE -fsanitize=undefined)
+target_link_libraries({pattern}_vulnerabilities_ubsan common)
+
+# Безопасные альтернативы
+add_executable(secure_{pattern}_alternatives secure_{pattern}_alternatives.cpp)
+target_link_libraries(secure_{pattern}_alternatives common)
+
+# Эксплоиты
+add_executable({pattern}_exploits exploits/{pattern}_exploits.cpp)
+target_link_libraries({pattern}_exploits common)
+
+# ----------------------------------------------------------------------------
+# ИНСТРУКЦИИ ПО ИСПОЛЬЗОВАНИЮ
+# ----------------------------------------------------------------------------
+
+message(STATUS "=== МОДУЛЬ {PATTERN_NAME} С АНАЛИЗОМ БЕЗОПАСНОСТИ ===")
+message(STATUS "")
+message(STATUS "Основные цели:")
+message(STATUS "  make {pattern}_pattern          - Классический {PATTERN_NAME}")
+message(STATUS "  make modern_{pattern}           - Современный {PATTERN_NAME}")
+message(STATUS "")
+message(STATUS "Анализ безопасности:")
+message(STATUS "  make {pattern}_vulnerabilities  - Уязвимые реализации")
+message(STATUS "  make {pattern}_vulnerabilities_tsan  - С ThreadSanitizer")
+message(STATUS "  make {pattern}_vulnerabilities_asan  - С AddressSanitizer")
+message(STATUS "  make {pattern}_vulnerabilities_ubsan  - С UndefinedBehaviorSanitizer")
+message(STATUS "")
+message(STATUS "Безопасные альтернативы:")
+message(STATUS "  make secure_{pattern}_alternatives  - Безопасные реализации")
+message(STATUS "")
+message(STATUS "Эксплоиты:")
+message(STATUS "  make {pattern}_exploits         - Практические эксплоиты")
+message(STATUS "")
+message(STATUS "Запуск анализа:")
+message(STATUS "  ./{pattern}_vulnerabilities_tsan    # Обнаружение race conditions")
+message(STATUS "  ./{pattern}_vulnerabilities_asan     # Обнаружение use-after-free")
+message(STATUS "  ./{pattern}_vulnerabilities_ubsan    # Обнаружение undefined behavior")
+message(STATUS "")
+message(STATUS "Статический анализ:")
+message(STATUS "  clang --analyze {pattern}_vulnerabilities.cpp")
+message(STATUS "  cppcheck --enable=all {pattern}_vulnerabilities.cpp")
+message(STATUS "")
+message(STATUS "Динамический анализ с Valgrind:")
+message(STATUS "  valgrind --tool=helgrind ./{pattern}_vulnerabilities")
+message(STATUS "  valgrind --tool=memcheck ./{pattern}_vulnerabilities")

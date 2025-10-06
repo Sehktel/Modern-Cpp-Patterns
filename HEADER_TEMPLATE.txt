@@ -1,0 +1,11 @@
+/**
+ * @file [FILENAME]
+ * @brief [BRIEF_DESCRIPTION]
+ * 
+ * [DETAILED_DESCRIPTION]
+ * 
+ * @author Sehktel
+ * @license MIT License
+ * @copyright Copyright (c) 2025 Sehktel
+ * @version 1.0
+ */
