@@ -8,49 +8,49 @@
 - Файл — краткое положение/контекст — планируемое действие
 
 ## Плакаты (posters)
-- posters/lesson_7_2_thread_pool_poster.md — заглушка плаката — Написать и оформить плакат
-- posters/lesson_7_4_reactor_poster.md — заглушка плаката — Написать и оформить плакат
-- posters/lesson_8_2_circuit_breaker_poster.md — заглушка плаката — Написать и оформить плакат
-- posters/lesson_8_3_bulkhead_poster.md — заглушка плаката — Написать и оформить плакат
-- posters/lesson_8_4_saga_poster.md — заглушка плаката — Написать и оформить плакат
-- posters/lesson_9_1_object_pool_poster.md — заглушка плаката — Написать и оформить плакат
-- posters/lesson_9_2_flyweight_poster.md — заглушка плаката — Написать и оформить плакат
-- posters/lesson_9_3_command_queue_poster.md — заглушка плаката — Написать и оформить плакат
+- posters/lesson_7_2_thread_pool_poster.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- posters/lesson_7_4_reactor_poster.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- posters/lesson_8_2_circuit_breaker_poster.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- posters/lesson_8_3_bulkhead_poster.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- posters/lesson_8_4_saga_poster.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- posters/lesson_9_1_object_pool_poster.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- posters/lesson_9_2_flyweight_poster.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- posters/lesson_9_3_command_queue_poster.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
 
 ## Упражнения (exercises)
-- exercises/lesson_7_2_thread_pool_exercises.md — заглушка упражнений — Подготовить задания и ответы
-- exercises/lesson_7_3_actor_model_exercises.md — заглушка упражнений — Подготовить задания и ответы
-- exercises/lesson_7_4_reactor_exercises.md — заглушка упражнений — Подготовить задания и ответы
-- exercises/lesson_8_1_cache_aside_exercises.md — заглушка упражнений — Подготовить задания и ответы
-- exercises/lesson_8_2_circuit_breaker_exercises.md — заглушка упражнений — Подготовить задания и ответы
-- exercises/lesson_8_3_bulkhead_exercises.md — заглушка упражнений — Подготовить задания и ответы
-- exercises/lesson_8_4_saga_exercises.md — заглушка упражнений — Подготовить задания и ответы
-- exercises/lesson_9_1_object_pool_exercises.md — заглушка упражнений — Подготовить задания и ответы
-- exercises/lesson_9_2_flyweight_exercises.md — заглушка упражнений — Подготовить задания и ответы
-- exercises/lesson_9_3_command_queue_exercises.md — заглушка упражнений — Подготовить задания и ответы
+- exercises/lesson_7_2_thread_pool_exercises.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- exercises/lesson_7_3_actor_model_exercises.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- exercises/lesson_7_4_reactor_exercises.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- exercises/lesson_8_1_cache_aside_exercises.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- exercises/lesson_8_2_circuit_breaker_exercises.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- exercises/lesson_8_3_bulkhead_exercises.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- exercises/lesson_8_4_saga_exercises.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- exercises/lesson_9_1_object_pool_exercises.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- exercises/lesson_9_2_flyweight_exercises.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- exercises/lesson_9_3_command_queue_exercises.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
 
 ## 07-concurrency
 - 07-concurrency/lesson_7_2_thread_pool/async_thread_pool.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 07-concurrency/lesson_7_3_actor_model/message_passing.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 07-concurrency/lesson_7_4_reactor/reactor_pattern.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 07-concurrency/lesson_7_4_reactor/event_loop.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
-- 07-concurrency/lesson_7_4_reactor/README.md — разделы TODO — Заполнить описание, примеры и упражнения
+- 07-concurrency/lesson_7_4_reactor/README.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
 
 ## 08-high-load
 - 08-high-load/lesson_8_1_cache_aside/multi_level_cache.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 08-high-load/lesson_8_2_circuit_breaker/resilient_client.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 08-high-load/lesson_8_3_bulkhead/bulkhead_pattern.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 08-high-load/lesson_8_3_bulkhead/resource_isolation.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
-- 08-high-load/lesson_8_3_bulkhead/README.md — разделы TODO — Заполнить описание, примеры и упражнения
+- 08-high-load/lesson_8_3_bulkhead/README.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 08-high-load/lesson_8_4_saga/distributed_transactions.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
-- 08-high-load/lesson_8_4_saga/README.md — разделы TODO — Заполнить описание, примеры и упражнения
+- 08-high-load/lesson_8_4_saga/README.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
 
 ## 09-performance
 - 09-performance/lesson_9_2_flyweight/memory_optimization.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
-- 09-performance/lesson_9_2_flyweight/README.md — разделы TODO — Заполнить примеры и упражнения
+- 09-performance/lesson_9_2_flyweight/README.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 09-performance/lesson_9_3_command_queue/command_queue_pattern.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 09-performance/lesson_9_3_command_queue/batch_processing.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
-- 09-performance/lesson_9_3_command_queue/README.md — разделы TODO — Заполнить описание, примеры и упражнения
+- 09-performance/lesson_9_3_command_queue/README.md — ✅ РЕАЛИЗОВАНО (2025-10-07)
 
 ## Метаданные курса
 - COURSE_STRUCTURE_COMPLETE.md — множество маркеров TODO — Синхронизировать статусы с фактическим прогрессом, обновить список после реализации и удалить маркеры

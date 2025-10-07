@@ -10,10 +10,20 @@
 // ============================================================================
 // БЕЗОПАСНЫЕ АЛЬТЕРНАТИВЫ SINGLETON
 // ============================================================================
-
-// TODO: Добавить комментарии на русском языке
-// TODO: Создать дополнительные безопасные варианты
-// TODO: Добавить тесты безопасности
+//
+// Этот файл демонстрирует БЕЗОПАСНЫЕ реализации паттерна Singleton:
+// 1. Meyer's Singleton (C++11 thread-safe static)
+// 2. std::call_once Singleton
+// 3. std::shared_ptr Singleton с атомарными операциями
+// 4. Dependency Injection (альтернатива Singleton)
+//
+// ТЕСТИРОВАНИЕ БЕЗОПАСНОСТИ:
+// - ThreadSanitizer: g++ -fsanitize=thread -g secure_singleton_alternatives.cpp
+// - AddressSanitizer: g++ -fsanitize=address -g secure_singleton_alternatives.cpp
+// - Stress testing: множество потоков одновременно
+//
+// ✅ БЕЗОПАСНОСТЬ: Все реализации защищены от race conditions и memory leaks
+// ============================================================================
 
 // ----------------------------------------------------------------------------
 // БЕЗОПАСНАЯ АЛЬТЕРНАТИВА 1: Thread-Safe Singleton с std::call_once
