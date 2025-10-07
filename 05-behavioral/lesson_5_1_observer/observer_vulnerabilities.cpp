@@ -1,125 +1,350 @@
 ﻿#include <iostream>
+#include <vector>
+#include <memory>
 #include <thread>
 #include <mutex>
-#include <memory>
-#include <vector>
 #include <chrono>
-#include <cstring>
+#include <algorithm>
+
+/**
+ * @file observer_vulnerabilities.cpp
+ * @brief Демонстрация уязвимостей в паттерне Observer
+ * 
+ * Этот файл содержит примеры уязвимых реализаций паттерна Observer
+ * для образовательных целей. НЕ ИСПОЛЬЗОВАТЬ В PRODUCTION!
+ */
 
 // ============================================================================
-// РЈРЇР—Р’РРњР«Р• Р Р•РђР›РР—РђР¦РР observer Р”Р›РЇ РђРќРђР›РР—Рђ Р‘Р•Р—РћРџРђРЎРќРћРЎРўР
+// УЯЗВИМОСТЬ 1: USE-AFTER-FREE
+// Проблема: Subject хранит сырые указатели на observers, которые могут быть удалены
 // ============================================================================
 
-// TODO: Р”РѕР±Р°РІРёС‚СЊ РєРѕРјРјРµРЅС‚Р°СЂРёРё РЅР° СЂСѓСЃСЃРєРѕРј СЏР·С‹РєРµ
-// TODO: РЎРѕР·РґР°С‚СЊ СЌРєСЃРїР»РѕРёС‚С‹ РґР»СЏ РєР°Р¶РґРѕР№ СѓСЏР·РІРёРјРѕСЃС‚Рё
-// TODO: Р”РѕР±Р°РІРёС‚СЊ РёРЅСЃС‚СЂСѓРјРµРЅС‚С‹ Р°РЅР°Р»РёР·Р°
+class IObserver {
+public:
+    virtual ~IObserver() = default;
+    virtual void update(const std::string& message) = 0;
+};
 
-// ----------------------------------------------------------------------------
-// РЈРЇР—Р’РРњРћРЎРўР¬ 1: [РќРђР—Р’РђРќРР• РЈРЇР—Р’РРњРћРЎРўР]
-// ----------------------------------------------------------------------------
-class Vulnerableobserver {
+// УЯЗВИМАЯ РЕАЛИЗАЦИЯ: Использует сырые указатели
+class VulnerableSubject {
 private:
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ РїСЂРёРІР°С‚РЅС‹Рµ С‡Р»РµРЅС‹ РєР»Р°СЃСЃР°
+    std::vector<IObserver*> observers_;  // ОПАСНО: Сырые указатели!
     
 public:
-    Vulnerableobserver() {
-        // TODO: Р”РѕР±Р°РІРёС‚СЊ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ СЃ СѓСЏР·РІРёРјРѕСЃС‚СЏРјРё
-        std::cout << "Vulnerableobserver СЃРѕР·РґР°РЅ" << std::endl;
+    void attach(IObserver* observer) {
+        observers_.push_back(observer);
+        std::cout << "[Уязвимый Subject] Observer подписан\n";
     }
     
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ РјРµС‚РѕРґС‹ СЃ СѓСЏР·РІРёРјРѕСЃС‚СЏРјРё
+    void detach(IObserver* observer) {
+        observers_.erase(
+            std::remove(observers_.begin(), observers_.end(), observer),
+            observers_.end());
+        std::cout << "[Уязвимый Subject] Observer отписан\n";
+    }
     
-    ~Vulnerableobserver() {
-        // TODO: Р”РѕР±Р°РІРёС‚СЊ РґРµСЃС‚СЂСѓРєС‚РѕСЂ
-        std::cout << "Vulnerableobserver СѓРЅРёС‡С‚РѕР¶РµРЅ" << std::endl;
+    void notify(const std::string& message) {
+        std::cout << "[Уязвимый Subject] Отправка уведомления...\n";
+        for (auto* observer : observers_) {
+            // ОПАСНО: observer может быть уже удален!
+            observer->update(message);  // Potential use-after-free
+        }
     }
 };
 
-// ----------------------------------------------------------------------------
-// РЈРЇР—Р’РРњРћРЎРўР¬ 2: [РќРђР—Р’РђРќРР• РЈРЇР—Р’РРњРћРЎРўР]
-// ----------------------------------------------------------------------------
-class AnotherVulnerableobserver {
+class SimpleObserver : public IObserver {
 private:
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ РїСЂРёРІР°С‚РЅС‹Рµ С‡Р»РµРЅС‹ РєР»Р°СЃСЃР°
+    std::string name_;
     
 public:
-    AnotherVulnerableobserver() {
-        // TODO: Р”РѕР±Р°РІРёС‚СЊ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ СЃ СѓСЏР·РІРёРјРѕСЃС‚СЏРјРё
-        std::cout << "AnotherVulnerableobserver СЃРѕР·РґР°РЅ" << std::endl;
-    }
+    explicit SimpleObserver(const std::string& name) : name_(name) {}
     
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ РјРµС‚РѕРґС‹ СЃ СѓСЏР·РІРёРјРѕСЃС‚СЏРјРё
-    
-    ~AnotherVulnerableobserver() {
-        // TODO: Р”РѕР±Р°РІРёС‚СЊ РґРµСЃС‚СЂСѓРєС‚РѕСЂ
-        std::cout << "AnotherVulnerableobserver СѓРЅРёС‡С‚РѕР¶РµРЅ" << std::endl;
+    void update(const std::string& message) override {
+        std::cout << "[Observer " << name_ << "] Получено: " << message << "\n";
     }
 };
 
-// ----------------------------------------------------------------------------
-// Р”Р•РњРћРќРЎРўР РђР¦РРЇ РЈРЇР—Р’РРњРћРЎРўР•Р™
-// ----------------------------------------------------------------------------
-
-void demonstrateVulnerability1() {
-    std::cout << "\n=== Р”РµРјРѕРЅСЃС‚СЂР°С†РёСЏ СѓСЏР·РІРёРјРѕСЃС‚Рё 1 ===" << std::endl;
+// Демонстрация use-after-free
+void demonstrateUseAfterFree() {
+    std::cout << "\n=== УЯЗВИМОСТЬ 1: Use-After-Free ===\n";
     
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ РґРµРјРѕРЅСЃС‚СЂР°С†РёСЋ РїРµСЂРІРѕР№ СѓСЏР·РІРёРјРѕСЃС‚Рё
+    VulnerableSubject subject;
     
-    std::cout << "РЈСЏР·РІРёРјРѕСЃС‚СЊ 1 РїСЂРѕРґРµРјРѕРЅСЃС‚СЂРёСЂРѕРІР°РЅР°" << std::endl;
+    {
+        SimpleObserver observer("Temporary");
+        subject.attach(&observer);
+        subject.notify("Первое сообщение");
+        
+        // observer выходит из области видимости и удаляется
+    }
+    
+    // ОПАСНО: Subject все еще хранит указатель на удаленный объект
+    std::cout << "\nПопытка отправить уведомление после удаления observer...\n";
+    subject.notify("Второе сообщение");  // USE-AFTER-FREE!
 }
 
-void demonstrateVulnerability2() {
-    std::cout << "\n=== Р”РµРјРѕРЅСЃС‚СЂР°С†РёСЏ СѓСЏР·РІРёРјРѕСЃС‚Рё 2 ===" << std::endl;
+// ============================================================================
+// УЯЗВИМОСТЬ 2: RACE CONDITION
+// Проблема: Неатомарный доступ к списку observers в многопоточной среде
+// ============================================================================
+
+class UnsafeSubject {
+private:
+    std::vector<std::function<void(int)>> observers_;
+    // НЕТ МЬЮТЕКСА!
     
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ РґРµРјРѕРЅСЃС‚СЂР°С†РёСЋ РІС‚РѕСЂРѕР№ СѓСЏР·РІРёРјРѕСЃС‚Рё
+public:
+    void attach(std::function<void(int)> observer) {
+        observers_.push_back(observer);  // RACE CONDITION
+    }
     
-    std::cout << "РЈСЏР·РІРёРјРѕСЃС‚СЊ 2 РїСЂРѕРґРµРјРѕРЅСЃС‚СЂРёСЂРѕРІР°РЅР°" << std::endl;
+    void detach(std::function<void(int)> observer) {
+        // Упрощенно: просто очищаем (тоже race condition)
+        observers_.clear();  // RACE CONDITION
+    }
+    
+    void notify(int value) {
+        for (const auto& observer : observers_) {  // RACE CONDITION
+            observer(value);
+        }
+    }
+};
+
+// Демонстрация race condition
+void demonstrateRaceCondition() {
+    std::cout << "\n=== УЯЗВИМОСТЬ 2: Race Condition ===\n";
+    
+    UnsafeSubject subject;
+    
+    // Поток 1: Постоянно добавляет observers
+    std::thread producer([&subject]() {
+        for (int i = 0; i < 100; ++i) {
+            subject.attach([i](int val) {
+                // Наблюдатель
+            });
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
+        }
+    });
+    
+    // Поток 2: Постоянно уведомляет observers
+    std::thread notifier([&subject]() {
+        for (int i = 0; i < 100; ++i) {
+            subject.notify(i);  // RACE CONDITION: может произойти segfault
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
+        }
+    });
+    
+    producer.join();
+    notifier.join();
+    
+    std::cout << "Race condition test завершен (возможен segfault)\n";
 }
 
-// ----------------------------------------------------------------------------
-// РРќРЎРўР РЈРњР•РќРўР« РђРќРђР›РР—Рђ
-// ----------------------------------------------------------------------------
+// ============================================================================
+// УЯЗВИМОСТЬ 3: MEMORY LEAK
+// Проблема: Observer не отписывается от Subject
+// ============================================================================
 
-void runStaticAnalysis() {
-    std::cout << "\n=== РРЅСЃС‚СЂСѓРєС†РёРё РґР»СЏ СЃС‚Р°С‚РёС‡РµСЃРєРѕРіРѕ Р°РЅР°Р»РёР·Р° ===" << std::endl;
-    std::cout << "1. Clang Static Analyzer:" << std::endl;
-    std::cout << "   clang --analyze observer_vulnerabilities.cpp" << std::endl;
-    std::cout << "2. Cppcheck:" << std::endl;
-    std::cout << "   cppcheck --enable=all observer_vulnerabilities.cpp" << std::endl;
-    std::cout << "3. PVS-Studio:" << std::endl;
-    std::cout << "   pvs-studio-analyzer trace -- make" << std::endl;
+class LeakySubject {
+private:
+    std::vector<std::shared_ptr<IObserver>> observers_;
+    
+public:
+    void attach(std::shared_ptr<IObserver> observer) {
+        observers_.push_back(observer);  // Создает circular reference!
+    }
+    
+    // Нет метода detach!
+    
+    void notify(const std::string& message) {
+        for (auto& observer : observers_) {
+            observer->update(message);
+        }
+    }
+};
+
+class SelfReferencingObserver : public IObserver {
+private:
+    std::shared_ptr<LeakySubject> subject_;  // ОПАСНО: Циклическая ссылка!
+    std::string name_;
+    
+public:
+    SelfReferencingObserver(std::shared_ptr<LeakySubject> subject, const std::string& name)
+        : subject_(subject), name_(name) {}
+    
+    void update(const std::string& message) override {
+        std::cout << "[Self-Referencing Observer " << name_ << "] " << message << "\n";
+    }
+};
+
+// Демонстрация memory leak
+void demonstrateMemoryLeak() {
+    std::cout << "\n=== УЯЗВИМОСТЬ 3: Memory Leak (Circular Reference) ===\n";
+    
+    auto subject = std::make_shared<LeakySubject>();
+    
+    for (int i = 0; i < 5; ++i) {
+        // ОПАСНО: Создаем циклическую ссылку
+        auto observer = std::make_shared<SelfReferencingObserver>(
+            subject, "Observer_" + std::to_string(i));
+        subject->attach(observer);
+    }
+    
+    subject->notify("Test message");
+    
+    std::cout << "Subject use_count: " << subject.use_count() << " (должен быть 1, но больше из-за циклических ссылок)\n";
+    
+    // subject и observers НЕ БУДУТ УДАЛЕНЫ из-за циклических ссылок!
 }
 
-void runDynamicAnalysis() {
-    std::cout << "\n=== РРЅСЃС‚СЂСѓРєС†РёРё РґР»СЏ РґРёРЅР°РјРёС‡РµСЃРєРѕРіРѕ Р°РЅР°Р»РёР·Р° ===" << std::endl;
-    std::cout << "1. AddressSanitizer:" << std::endl;
-    std::cout << "   g++ -fsanitize=address -g observer_vulnerabilities.cpp -o observer_asan" << std::endl;
-    std::cout << "   ./observer_asan" << std::endl;
-    std::cout << "2. ThreadSanitizer:" << std::endl;
-    std::cout << "   g++ -fsanitize=thread -g observer_vulnerabilities.cpp -o observer_tsan" << std::endl;
-    std::cout << "   ./observer_tsan" << std::endl;
-    std::cout << "3. Valgrind:" << std::endl;
-    std::cout << "   valgrind --tool=memcheck ./observer_vulnerabilities" << std::endl;
+// ============================================================================
+// УЯЗВИМОСТЬ 4: ITERATOR INVALIDATION
+// Проблема: Удаление observer во время итерации по списку
+// ============================================================================
+
+class InvalidatingSubject {
+private:
+    std::vector<IObserver*> observers_;
+    
+public:
+    void attach(IObserver* observer) {
+        observers_.push_back(observer);
+    }
+    
+    void detach(IObserver* observer) {
+        observers_.erase(
+            std::remove(observers_.begin(), observers_.end(), observer),
+            observers_.end());
+    }
+    
+    void notify(const std::string& message) {
+        // ОПАСНО: Observer может отписаться во время notify
+        for (auto* observer : observers_) {  // Iterator может быть invalidated!
+            observer->update(message);
+        }
+    }
+};
+
+class UnsubscribingObserver : public IObserver {
+private:
+    InvalidatingSubject& subject_;
+    std::string name_;
+    int callCount_ = 0;
+    
+public:
+    UnsubscribingObserver(InvalidatingSubject& subject, const std::string& name)
+        : subject_(subject), name_(name) {}
+    
+    void update(const std::string& message) override {
+        std::cout << "[Unsubscribing Observer " << name_ << "] " << message << "\n";
+        
+        callCount_++;
+        if (callCount_ >= 2) {
+            std::cout << "[Observer " << name_ << "] Отписываюсь во время notify!\n";
+            subject_.detach(this);  // ОПАСНО: Iterator invalidation!
+        }
+    }
+};
+
+// Демонстрация iterator invalidation
+void demonstrateIteratorInvalidation() {
+    std::cout << "\n=== УЯЗВИМОСТЬ 4: Iterator Invalidation ===\n";
+    
+    InvalidatingSubject subject;
+    
+    UnsubscribingObserver obs1(subject, "A");
+    UnsubscribingObserver obs2(subject, "B");
+    UnsubscribingObserver obs3(subject, "C");
+    
+    subject.attach(&obs1);
+    subject.attach(&obs2);
+    subject.attach(&obs3);
+    
+    std::cout << "Первое уведомление:\n";
+    subject.notify("Сообщение 1");
+    
+    std::cout << "\nВторое уведомление (observers будут отписываться):\n";
+    subject.notify("Сообщение 2");  // Iterator может быть invalidated!
 }
 
-// ----------------------------------------------------------------------------
-// РћРЎРќРћР’РќРђРЇ Р¤РЈРќРљР¦РРЇ
-// ----------------------------------------------------------------------------
+// ============================================================================
+// УЯЗВИМОСТЬ 5: DANGLING WEAK_PTR
+// Проблема: Неправильная проверка weak_ptr перед использованием
+// ============================================================================
+
+class DanglingWeakSubject {
+private:
+    std::vector<std::weak_ptr<IObserver>> observers_;
+    
+public:
+    void attach(std::weak_ptr<IObserver> observer) {
+        observers_.push_back(observer);
+    }
+    
+    void notify(const std::string& message) {
+        for (auto& weak_obs : observers_) {
+            auto observer = weak_obs.lock();
+            if (observer) {
+                observer->update(message);
+            }
+            // Проблема: НЕ удаляем expired weak_ptr
+            // Со временем вектор заполняется мертвыми указателями
+        }
+    }
+    
+    size_t getObserverCount() const {
+        return observers_.size();  // НЕПРАВИЛЬНО: включает expired указатели!
+    }
+};
+
+// Демонстрация dangling weak_ptr
+void demonstrateDanglingWeakPtr() {
+    std::cout << "\n=== УЯЗВИМОСТЬ 5: Dangling Weak Pointers ===\n";
+    
+    DanglingWeakSubject subject;
+    
+    for (int i = 0; i < 10; ++i) {
+        auto observer = std::make_shared<SimpleObserver>("Temp_" + std::to_string(i));
+        subject.attach(observer);
+        // observer удаляется сразу после выхода из итерации
+    }
+    
+    std::cout << "Количество observers (включая мертвые): " << subject.getObserverCount() << "\n";
+    
+    subject.notify("Сообщение для несуществующих observers");
+    
+    std::cout << "Все observers мертвы, но weak_ptr остаются в векторе!\n";
+}
+
+// ============================================================================
+// MAIN
+// ============================================================================
 
 int main() {
-    std::cout << "=== РђРќРђР›РР— РЈРЇР—Р’РРњРћРЎРўР•Р™ Р’ РџРђРўРўР•Р РќР• observer ===" << std::endl;
+    std::cout << "=== ДЕМОНСТРАЦИЯ УЯЗВИМОСТЕЙ OBSERVER PATTERN ===\n";
+    std::cout << "⚠️  ВНИМАНИЕ: Этот код содержит уязвимости для образовательных целей!\n\n";
     
-    // Р”РµРјРѕРЅСЃС‚СЂР°С†РёСЏ СЂР°Р·Р»РёС‡РЅС‹С… СѓСЏР·РІРёРјРѕСЃС‚РµР№
-    demonstrateVulnerability1();
-    demonstrateVulnerability2();
+    try {
+        demonstrateUseAfterFree();          // Может вызвать segfault
+    } catch (...) {
+        std::cout << "Caught exception in use-after-free demo\n";
+    }
     
-    // РРЅСЃС‚СЂСѓРєС†РёРё РїРѕ Р°РЅР°Р»РёР·Сѓ
-    runStaticAnalysis();
-    runDynamicAnalysis();
+    try {
+        demonstrateRaceCondition();         // Может вызвать data race
+    } catch (...) {
+        std::cout << "Caught exception in race condition demo\n";
+    }
     
-    std::cout << "\n=== Р’РќРРњРђРќРР•: Р­С‚РѕС‚ РєРѕРґ СЃРѕРґРµСЂР¶РёС‚ СѓСЏР·РІРёРјРѕСЃС‚Рё! ===" << std::endl;
-    std::cout << "РСЃРїРѕР»СЊР·СѓР№С‚Рµ С‚РѕР»СЊРєРѕ РґР»СЏ РѕР±СѓС‡РµРЅРёСЏ Рё Р°РЅР°Р»РёР·Р° Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё." << std::endl;
+    demonstrateMemoryLeak();                // Memory leak
+    demonstrateIteratorInvalidation();      // Может вызвать undefined behavior
+    demonstrateDanglingWeakPtr();           // Resource leak
+    
+    std::cout << "\n=== АНАЛИЗ ЗАВЕРШЕН ===\n";
+    std::cout << "Используйте:\n";
+    std::cout << "• AddressSanitizer: g++ -fsanitize=address -g observer_vulnerabilities.cpp\n";
+    std::cout << "• ThreadSanitizer: g++ -fsanitize=thread -g observer_vulnerabilities.cpp\n";
+    std::cout << "• Valgrind: valgrind --leak-check=full ./observer_vulnerabilities\n";
     
     return 0;
 }
-
