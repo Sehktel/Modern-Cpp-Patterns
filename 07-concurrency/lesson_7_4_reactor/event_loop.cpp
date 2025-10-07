@@ -2,17 +2,6 @@
  * @file event_loop.cpp
  * @brief Реализация Event Loop для Reactor Pattern
  * 
- * TODO: Реализовать Event Loop:
- * - Основной цикл обработки событий
- * - Интеграция с epoll/select
- * - Обработка таймеров
- * - Управление жизненным циклом
- */
-
-/**
- * @file event_loop.cpp
- * @brief Реализация Event Loop для Reactor Pattern
- * 
  * Реализован Event Loop с поддержкой:
  * - Основной цикл обработки событий
  * - Интеграция с epoll/select

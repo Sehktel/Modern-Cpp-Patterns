@@ -75,3 +75,4 @@ foreach ($m in $modules) {
 }
 
 Write-Host 'Генерация заглушек завершена.'
+

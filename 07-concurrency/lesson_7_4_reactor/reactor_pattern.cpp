@@ -2,17 +2,6 @@
  * @file reactor_pattern.cpp
  * @brief Демонстрация Reactor Pattern
  * 
- * TODO: Реализовать Reactor Pattern:
- * - Event Loop с epoll/select
- * - Event Handlers для различных типов событий
- * - HTTP сервер на Reactor
- * - TCP клиент/сервер
- */
-
-/**
- * @file reactor_pattern.cpp
- * @brief Демонстрация Reactor Pattern
- * 
  * Реализован Reactor Pattern с поддержкой:
  * - Event Loop с epoll/select
  * - Event Handlers для различных типов событий

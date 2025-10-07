@@ -74,3 +74,4 @@ message(STATUS "")
 message(STATUS "Динамический анализ с Valgrind:")
 message(STATUS "  valgrind --tool=helgrind ./singleton_vulnerabilities")
 message(STATUS "  valgrind --tool=memcheck ./singleton_vulnerabilities")
+

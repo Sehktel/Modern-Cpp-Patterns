@@ -30,26 +30,26 @@
 - exercises/lesson_9_3_command_queue_exercises.md — заглушка упражнений — Подготовить задания и ответы
 
 ## 07-concurrency
-- 07-concurrency/lesson_7_2_thread_pool/async_thread_pool.cpp — комментарий-заглушка — Реализовать асинхронный Thread Pool (интерфейсы, задачи, очередь, воркеры)
-- 07-concurrency/lesson_7_3_actor_model/message_passing.cpp — комментарий-заглушка — Реализовать расширенные примеры передачи сообщений (почтовые ящики, маршрутизация)
-- 07-concurrency/lesson_7_4_reactor/reactor_pattern.cpp — комментарий-заглушка — Реализовать Reactor Pattern (мультиплексирование событий)
-- 07-concurrency/lesson_7_4_reactor/event_loop.cpp — комментарий-заглушка — Реализовать Event Loop (цикл, источники событий, обработчики)
+- 07-concurrency/lesson_7_2_thread_pool/async_thread_pool.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- 07-concurrency/lesson_7_3_actor_model/message_passing.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- 07-concurrency/lesson_7_4_reactor/reactor_pattern.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- 07-concurrency/lesson_7_4_reactor/event_loop.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 07-concurrency/lesson_7_4_reactor/README.md — разделы TODO — Заполнить описание, примеры и упражнения
 
 ## 08-high-load
-- 08-high-load/lesson_8_1_cache_aside/multi_level_cache.cpp — комментарий-заглушка — Реализовать многоуровневый кэш (L1/L2, инвалидация)
-- 08-high-load/lesson_8_2_circuit_breaker/resilient_client.cpp — комментарий-заглушка — Реализовать клиент с Circuit Breaker (состояния, метрики, таймауты)
-- 08-high-load/lesson_8_3_bulkhead/bulkhead_pattern.cpp — комментарий-заглушка — Реализовать Bulkhead Pattern (ограничения на пул/очереди)
-- 08-high-load/lesson_8_3_bulkhead/resource_isolation.cpp — комментарий-заглушка — Реализовать изоляцию ресурсов (сегментация потоков/лимиты)
+- 08-high-load/lesson_8_1_cache_aside/multi_level_cache.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- 08-high-load/lesson_8_2_circuit_breaker/resilient_client.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- 08-high-load/lesson_8_3_bulkhead/bulkhead_pattern.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- 08-high-load/lesson_8_3_bulkhead/resource_isolation.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 08-high-load/lesson_8_3_bulkhead/README.md — разделы TODO — Заполнить описание, примеры и упражнения
-- 08-high-load/lesson_8_4_saga/distributed_transactions.cpp — комментарий-заглушка — Реализовать распределённые транзакции (саги/компенсации)
+- 08-high-load/lesson_8_4_saga/distributed_transactions.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 08-high-load/lesson_8_4_saga/README.md — разделы TODO — Заполнить описание, примеры и упражнения
 
 ## 09-performance
-- 09-performance/lesson_9_2_flyweight/memory_optimization.cpp — комментарий-заглушка — Реализовать оптимизацию памяти через Flyweight (шары состояний)
+- 09-performance/lesson_9_2_flyweight/memory_optimization.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 09-performance/lesson_9_2_flyweight/README.md — разделы TODO — Заполнить примеры и упражнения
-- 09-performance/lesson_9_3_command_queue/command_queue_pattern.cpp — комментарий-заглушка — Реализовать Command Queue (команды, очередь, воркеры, ретраи)
-- 09-performance/lesson_9_3_command_queue/batch_processing.cpp — комментарий-заглушка — Реализовать батчинг (агрегация, флаш, метрики)
+- 09-performance/lesson_9_3_command_queue/command_queue_pattern.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
+- 09-performance/lesson_9_3_command_queue/batch_processing.cpp — ✅ РЕАЛИЗОВАНО (2025-10-07)
 - 09-performance/lesson_9_3_command_queue/README.md — разделы TODO — Заполнить описание, примеры и упражнения
 
 ## Метаданные курса
@@ -117,6 +117,31 @@
 - 09-performance/lesson_9_1_object_pool — пакет заглушек (SECURITY_ANALYSIS.md, object_pool_vulnerabilities.cpp, exploits/object_pool_exploits.cpp, secure_object_pool_alternatives.cpp, CMakeLists.txt) — Проверить и дополнить анализ, снять TODO, расширить reuse-after-free/fragmentation кейсы, добавить юнит‑тесты и санитайзеры
 - 09-performance/lesson_9_2_flyweight — пакет заглушек (SECURITY_ANALYSIS.md, flyweight_vulnerabilities.cpp, exploits/flyweight_exploits.cpp, secure_flyweight_alternatives.cpp, CMakeLists.txt) — Проверить и дополнить анализ, снять TODO, расширить shared state leakage/aliasing кейсы, добавить юнит‑тесты и санитайзеры
 - 09-performance/lesson_9_3_command_queue — пакет заглушек (SECURITY_ANALYSIS.md, command_queue_vulnerabilities.cpp, exploits/command_queue_exploits.cpp, secure_command_queue_alternatives.cpp, CMakeLists.txt) — Проверить и дополнить анализ, снять TODO, расширить batching/queue overflow/race кейсы, добавить юнит‑тесты и санитайзеры
+
+## C++23 Migration (миграция на C++23)
+- 03-creational/lesson_3_1_singleton — файл сравнения C++17/20 vs C++23 — Создать singleton_cpp23_comparison.cpp с std::expected, std::print, std::jthread, улучшенной thread-safety
+- 03-creational/lesson_3_2_factory_method — файл сравнения C++17/20 vs C++23 — Создать factory_method_cpp23_comparison.cpp с std::expected, std::print, std::flat_map для регистрации фабрик
+- 03-creational/lesson_3_3_abstract_factory — файл сравнения C++17/20 vs C++23 — Создать abstract_factory_cpp23_comparison.cpp с std::expected, std::generator для ленивого создания объектов
+- 03-creational/lesson_3_4_builder — файл сравнения C++17/20 vs C++23 — Создать builder_cpp23_comparison.cpp с std::expected, std::print, улучшенной валидацией параметров
+- 04-structural/lesson_4_1_adapter — файл сравнения C++17/20 vs C++23 — Создать adapter_cpp23_comparison.cpp с std::expected, std::print, std::flat_map для адаптеров
+- 04-structural/lesson_4_2_decorator — файл сравнения C++17/20 vs C++23 — Создать decorator_cpp23_comparison.cpp с std::expected, std::generator для цепочки декораторов
+- 04-structural/lesson_4_3_facade — файл сравнения C++17/20 vs C++23 — Создать facade_cpp23_comparison.cpp с std::expected, std::print, улучшенным API
+- 04-structural/lesson_4_4_proxy — файл сравнения C++17/20 vs C++23 — Создать proxy_cpp23_comparison.cpp с std::expected, std::jthread для асинхронных прокси
+- 05-behavioral/lesson_5_1_observer — файл сравнения C++17/20 vs C++23 — Создать observer_cpp23_comparison.cpp с std::expected, std::print, std::flat_map для подписчиков
+- 05-behavioral/lesson_5_2_strategy — файл сравнения C++17/20 vs C++23 — Создать strategy_cpp23_comparison.cpp с std::expected, std::print, std::flat_map для стратегий
+- 05-behavioral/lesson_5_3_command — файл сравнения C++17/20 vs C++23 — Создать command_cpp23_comparison.cpp с std::expected, std::generator для команд, std::jthread для выполнения
+- 05-behavioral/lesson_5_4_state — файл сравнения C++17/20 vs C++23 — Создать state_cpp23_comparison.cpp с std::expected, std::print, улучшенными переходами состояний
+- 06-modern-cpp/lesson_6_1_smart_pointers — файл сравнения C++17/20 vs C++23 — Создать smart_pointers_cpp23_comparison.cpp с std::expected, std::print, улучшенным управлением памятью
+- 06-modern-cpp/lesson_6_2_move_semantics — файл сравнения C++17/20 vs C++23 — Создать move_semantics_cpp23_comparison.cpp с std::expected, std::print, std::mdspan для многомерных данных
+- 06-modern-cpp/lesson_6_3_crtp — файл сравнения C++17/20 vs C++23 — Создать crtp_cpp23_comparison.cpp с std::expected, std::print, улучшенной type safety
+- 06-modern-cpp/lesson_6_4_type_erasure — файл сравнения C++17/20 vs C++23 — Создать type_erasure_cpp23_comparison.cpp с std::expected, std::print, std::generator для ленивых вычислений
+- 07-concurrency/lesson_7_3_actor_model — файл сравнения C++17/20 vs C++23 — Создать actor_model_cpp23_comparison.cpp с std::expected, std::print, std::jthread, std::generator для сообщений
+- 08-high-load/lesson_8_1_cache_aside — файл сравнения C++17/20 vs C++23 — Создать cache_aside_cpp23_comparison.cpp с std::expected, std::print, std::flat_map для кэша
+- 08-high-load/lesson_8_3_bulkhead — файл сравнения C++17/20 vs C++23 — Создать bulkhead_cpp23_comparison.cpp с std::expected, std::print, std::jthread для изоляции ресурсов
+- 08-high-load/lesson_8_4_saga — файл сравнения C++17/20 vs C++23 — Создать saga_cpp23_comparison.cpp с std::expected, std::print, std::generator для компенсирующих операций
+- 09-performance/lesson_9_1_object_pool — файл сравнения C++17/20 vs C++23 — Создать object_pool_cpp23_comparison.cpp с std::expected, std::print, std::jthread для управления пулом
+- 09-performance/lesson_9_2_flyweight — файл сравнения C++17/20 vs C++23 — Создать flyweight_cpp23_comparison.cpp с std::expected, std::print, std::flat_map для хранения flyweight объектов
+- 09-performance/lesson_9_3_command_queue — файл сравнения C++17/20 vs C++23 — Создать command_queue_cpp23_comparison.cpp с std::expected, std::print, std::jthread, std::generator для очереди команд
 
 ---
 

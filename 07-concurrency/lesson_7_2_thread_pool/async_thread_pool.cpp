@@ -2,17 +2,6 @@
  * @file async_thread_pool.cpp
  * @brief Асинхронный Thread Pool с современными C++ возможностями
  * 
- * TODO: Реализовать асинхронный Thread Pool:
- * - std::async интеграция
- * - std::future/std::promise
- * - Work stealing
- * - Динамическое масштабирование
- */
-
-/**
- * @file async_thread_pool.cpp
- * @brief Асинхронный Thread Pool с современными C++ возможностями
- * 
  * Реализован асинхронный Thread Pool с поддержкой:
  * - std::async интеграция
  * - std::future/std::promise
