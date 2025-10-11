@@ -282,6 +282,24 @@ python tools/generate_docs.py
 - [CPP23_MIGRATION_GUIDE.md](CPP23_MIGRATION_GUIDE.md) - Миграция на C++23
 - [tools/README.md](tools/README.md) - Инструменты разработки
 
+### 🆕 Валидация AI-кода
+
+- **[VALIDATION_QUICKSTART.md](VALIDATION_QUICKSTART.md)** - 🚀 Быстрый старт за 5 минут
+- [tools/VERIFICATION_STRATEGY.md](tools/VERIFICATION_STRATEGY.md) - Полная стратегия верификации
+- [tools/PRACTICAL_VALIDATION_GUIDE.md](tools/PRACTICAL_VALIDATION_GUIDE.md) - Практические примеры
+
+**Проблема**: Как проверить, что AI-генерированный код не "врет"?
+
+**Решение**: Автоматическая валидация с санитайзерами (ASan, TSan) и статическим анализом (Clang-Tidy, Cppcheck)
+
+```powershell
+# Проверить один паттерн
+.\tools\validate_pattern.ps1 -Pattern "singleton" -Full
+
+# Проверить всё (35 паттернов)
+.\tools\validate_all_patterns.ps1 -Full
+```
+
 ---
 
 ## 💡 Философия Курса
