@@ -1,333 +1,452 @@
 ﻿#include <iostream>
-#include <thread>
-#include <mutex>
-#include <memory>
-#include <vector>
-#include <chrono>
-#include <cstring>
-#include <atomic>
 #include <string>
+#include <vector>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <regex>
+
+/**
+ * @file secure_builder_alternatives.cpp
+ * @brief Безопасные реализации паттерна Builder
+ */
 
 // ============================================================================
-// БЕЗОПАСНЫЕ АЛЬТЕРНАТИВЫ BUILDER
+// БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 1: BUILDER С BOUNDS CHECKING
+// Решает: Buffer Overflow
 // ============================================================================
 
-// TODO: Добавить комментарии на русском языке
-// TODO: Создать дополнительные безопасные варианты
-// TODO: Добавить тесты безопасности
-
-// ----------------------------------------------------------------------------
-// БЕЗОПАСНАЯ АЛЬТЕРНАТИВА 1: Builder с std::vector
-// ----------------------------------------------------------------------------
-
-class SecureBuilderV1 {
+class SafeMessage {
 private:
-    std::vector<char> buffer;
-    mutable std::mutex buffer_mutex;
+    std::string header_;
+    std::string body_;
+    std::string footer_;
     
 public:
-    SecureBuilderV1() {
-        std::cout << "SecureBuilderV1 создан в потоке " << std::this_thread::get_id() << std::endl;
-    }
+    SafeMessage(std::string h, std::string b, std::string f)
+        : header_(std::move(h)), body_(std::move(b)), footer_(std::move(f)) {}
     
-    // Удаляем копирование и присваивание
-    SecureBuilderV1(const SecureBuilderV1&) = delete;
-    SecureBuilderV1& operator=(const SecureBuilderV1&) = delete;
-    
-    // Безопасное добавление данных
-    void addData(const char* data, size_t length) {
-        std::lock_guard<std::mutex> lock(buffer_mutex);
-        
-        // Безопасное добавление с проверкой размера
-        size_t oldSize = buffer.size();
-        buffer.resize(oldSize + length);
-        
-        // Безопасное копирование
-        std::memcpy(buffer.data() + oldSize, data, length);
-    }
-    
-    // Безопасное добавление строки
-    void addString(const std::string& str) {
-        addData(str.c_str(), str.length());
-    }
-    
-    // Безопасное получение данных
-    std::vector<char> getData() const {
-        std::lock_guard<std::mutex> lock(buffer_mutex);
-        return buffer;
-    }
-    
-    size_t getSize() const {
-        std::lock_guard<std::mutex> lock(buffer_mutex);
-        return buffer.size();
-    }
-    
-    ~SecureBuilderV1() {
-        std::cout << "SecureBuilderV1 уничтожен" << std::endl;
+    void display() const {
+        std::cout << "Header: " << header_ << "\n";
+        std::cout << "Body: " << body_ << "\n";
+        std::cout << "Footer: " << footer_ << "\n";
     }
 };
 
-// ----------------------------------------------------------------------------
-// БЕЗОПАСНАЯ АЛЬТЕРНАТИВА 2: Builder с std::string
-// ----------------------------------------------------------------------------
-
-class SecureBuilderV2 {
+class SafeMessageBuilder {
 private:
-    std::string data;
-    mutable std::mutex data_mutex;
+    std::string header_;
+    std::string body_;
+    std::string footer_;
+    
+    static constexpr size_t MAX_HEADER = 64;
+    static constexpr size_t MAX_BODY = 256;
+    static constexpr size_t MAX_FOOTER = 32;
     
 public:
-    SecureBuilderV2() {
-        std::cout << "SecureBuilderV2 создан в потоке " << std::this_thread::get_id() << std::endl;
+    SafeMessageBuilder& setHeader(const std::string& header) {
+        if (header.length() > MAX_HEADER) {
+            throw std::length_error("Header exceeds maximum length");
+        }
+        header_ = header;
+        return *this;
     }
     
-    // Удаляем копирование и присваивание
-    SecureBuilderV2(const SecureBuilderV2&) = delete;
-    SecureBuilderV2& operator=(const SecureBuilderV2&) = delete;
-    
-    // Безопасное добавление данных
-    void addData(const char* str) {
-        std::lock_guard<std::mutex> lock(data_mutex);
-        data += str;
+    SafeMessageBuilder& setBody(const std::string& body) {
+        if (body.length() > MAX_BODY) {
+            throw std::length_error("Body exceeds maximum length");
+        }
+        body_ = body;
+        return *this;
     }
     
-    void addData(const std::string& str) {
-        std::lock_guard<std::mutex> lock(data_mutex);
-        data += str;
+    SafeMessageBuilder& setFooter(const std::string& footer) {
+        if (footer.length() > MAX_FOOTER) {
+            throw std::length_error("Footer exceeds maximum length");
+        }
+        footer_ = footer;
+        return *this;
     }
     
-    // Безопасное получение данных
-    std::string getData() const {
-        std::lock_guard<std::mutex> lock(data_mutex);
-        return data;
-    }
-    
-    size_t getSize() const {
-        std::lock_guard<std::mutex> lock(data_mutex);
-        return data.size();
-    }
-    
-    ~SecureBuilderV2() {
-        std::cout << "SecureBuilderV2 уничтожен" << std::endl;
+    SafeMessage build() {
+        return SafeMessage(header_, body_, footer_);
     }
 };
 
-// ----------------------------------------------------------------------------
-// БЕЗОПАСНАЯ АЛЬТЕРНАТИВА 3: Builder с проверкой размеров
-// ----------------------------------------------------------------------------
+void demonstrateSafeBoundsChecking() {
+    std::cout << "\n=== БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 1: Bounds Checking ===\n";
+    
+    SafeMessageBuilder builder;
+    
+    try {
+        std::string huge(100, 'A');
+        builder.setHeader(huge);  // Вызовет exception
+    } catch (const std::length_error& e) {
+        std::cout << "✅ Блокировано: " << e.what() << "\n";
+    }
+    
+    auto msg = builder
+        .setHeader("Valid")
+        .setBody("Content")
+        .setFooter("End")
+        .build();
+    
+    msg.display();
+    std::cout << "✅ Безопасно: все проверки пройдены\n";
+}
 
-class SecureBuilderV3 {
+// ============================================================================
+// БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 2: BUILDER С OVERFLOW PROTECTION
+// Решает: Integer Overflow
+// ============================================================================
+
+class SafeDataBlock {
 private:
-    std::vector<char> buffer;
-    size_t maxSize;
-    mutable std::mutex buffer_mutex;
+    std::vector<char> data_;
     
 public:
-    SecureBuilderV3(size_t maxSize = 1024 * 1024) : maxSize(maxSize) {
-        std::cout << "SecureBuilderV3 создан с максимальным размером " << maxSize << std::endl;
+    explicit SafeDataBlock(std::vector<char> data) : data_(std::move(data)) {}
+    size_t size() const { return data_.size(); }
+};
+
+class SafeDataBlockBuilder {
+private:
+    size_t chunk_size_ = 0;
+    size_t chunk_count_ = 0;
+    
+    static constexpr size_t MAX_SIZE = 1024 * 1024 * 100;  // 100 MB limit
+    
+public:
+    SafeDataBlockBuilder& setChunkSize(size_t size) {
+        chunk_size_ = size;
+        return *this;
     }
     
-    // Удаляем копирование и присваивание
-    SecureBuilderV3(const SecureBuilderV3&) = delete;
-    SecureBuilderV3& operator=(const SecureBuilderV3&) = delete;
+    SafeDataBlockBuilder& setChunkCount(size_t count) {
+        chunk_count_ = count;
+        return *this;
+    }
     
-    // Безопасное добавление с проверкой размера
-    bool addData(const char* data, size_t length) {
-        std::lock_guard<std::mutex> lock(buffer_mutex);
-        
-        // Проверка на переполнение
-        if (buffer.size() + length > maxSize) {
-            std::cout << "ОШИБКА: Превышен максимальный размер буфера!" << std::endl;
-            return false;
+    SafeDataBlock build() {
+        // Проверка переполнения
+        if (chunk_count_ > 0 && chunk_size_ > MAX_SIZE / chunk_count_) {
+            throw std::overflow_error("Size calculation would overflow");
         }
         
-        // Проверка на integer overflow
-        if (buffer.size() > SIZE_MAX - length) {
-            std::cout << "ОШИБКА: Integer overflow при добавлении данных!" << std::endl;
-            return false;
+        size_t total_size = chunk_size_ * chunk_count_;
+        
+        if (total_size > MAX_SIZE) {
+            throw std::length_error("Total size exceeds maximum");
         }
         
-        // Безопасное добавление
-        size_t oldSize = buffer.size();
-        buffer.resize(oldSize + length);
-        std::memcpy(buffer.data() + oldSize, data, length);
-        
-        return true;
-    }
-    
-    // Безопасное получение данных
-    std::vector<char> getData() const {
-        std::lock_guard<std::mutex> lock(buffer_mutex);
-        return buffer;
-    }
-    
-    size_t getSize() const {
-        std::lock_guard<std::mutex> lock(buffer_mutex);
-        return buffer.size();
-    }
-    
-    size_t getMaxSize() const {
-        return maxSize;
-    }
-    
-    ~SecureBuilderV3() {
-        std::cout << "SecureBuilderV3 уничтожен" << std::endl;
+        std::vector<char> data(total_size, 0);
+        return SafeDataBlock(std::move(data));
     }
 };
 
-// ----------------------------------------------------------------------------
-// БЕЗОПАСНАЯ АЛЬТЕРНАТИВА 4: Builder с RAII и умными указателями
-// ----------------------------------------------------------------------------
+void demonstrateSafeOverflowProtection() {
+    std::cout << "\n=== БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 2: Overflow Protection ===\n";
+    
+    SafeDataBlockBuilder builder;
+    
+    try {
+        size_t huge = std::numeric_limits<size_t>::max() / 2 + 1;
+        auto block = builder.setChunkSize(huge).setChunkCount(2).build();
+    } catch (const std::overflow_error& e) {
+        std::cout << "✅ Блокировано: " << e.what() << "\n";
+    }
+    
+    auto block = builder.setChunkSize(1024).setChunkCount(100).build();
+    std::cout << "✅ Создан блок размером " << block.size() << " байт\n";
+}
 
-class SecureBuilderV4 {
+// ============================================================================
+// БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 3: BUILDER С VALIDATION В SETTERS
+// Решает: Validation Bypass
+// ============================================================================
+
+class ValidatedUser {
 private:
-    std::unique_ptr<std::vector<char>> buffer;
-    mutable std::mutex buffer_mutex;
+    std::string username_;
+    std::string email_;
+    int age_;
+    bool is_admin_;
     
 public:
-    SecureBuilderV4() : buffer(std::make_unique<std::vector<char>>()) {
-        std::cout << "SecureBuilderV4 создан в потоке " << std::this_thread::get_id() << std::endl;
+    ValidatedUser(std::string u, std::string e, int a, bool admin)
+        : username_(std::move(u)), email_(std::move(e)), age_(a), is_admin_(admin) {}
+    
+    void display() const {
+        std::cout << "User: " << username_ << ", Email: " << email_ 
+                  << ", Age: " << age_ << ", Admin: " << is_admin_ << "\n";
+    }
+};
+
+class ValidatedUserBuilder {
+private:
+    std::string username_;
+    std::string email_;
+    int age_ = 0;
+    bool is_admin_ = false;
+    bool admin_approved_ = false;  // Требуется подтверждение
+    
+    static bool isValidEmail(const std::string& email) {
+        std::regex pattern(R"([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})");
+        return std::regex_match(email, pattern);
     }
     
-    // Удаляем копирование и присваивание
-    SecureBuilderV4(const SecureBuilderV4&) = delete;
-    SecureBuilderV4& operator=(const SecureBuilderV4&) = delete;
-    
-    // Безопасное добавление данных
-    void addData(const char* data, size_t length) {
-        std::lock_guard<std::mutex> lock(buffer_mutex);
-        
-        if (!buffer) {
-            buffer = std::make_unique<std::vector<char>>();
+public:
+    ValidatedUserBuilder& setUsername(const std::string& name) {
+        if (name.empty() || name.length() > 50) {
+            throw std::invalid_argument("Invalid username");
         }
-        
-        // Безопасное добавление
-        size_t oldSize = buffer->size();
-        buffer->resize(oldSize + length);
-        std::memcpy(buffer->data() + oldSize, data, length);
+        username_ = name;
+        return *this;
     }
     
-    // Безопасное получение данных
-    std::vector<char> getData() const {
-        std::lock_guard<std::mutex> lock(buffer_mutex);
-        if (!buffer) {
-            return std::vector<char>();
+    ValidatedUserBuilder& setEmail(const std::string& email) {
+        if (!isValidEmail(email)) {
+            throw std::invalid_argument("Invalid email format");
         }
-        return *buffer;
+        email_ = email;
+        return *this;
     }
     
-    size_t getSize() const {
-        std::lock_guard<std::mutex> lock(buffer_mutex);
-        if (!buffer) {
-            return 0;
+    ValidatedUserBuilder& setAge(int age) {
+        if (age < 0 || age > 150) {
+            throw std::invalid_argument("Invalid age");
         }
-        return buffer->size();
+        age_ = age;
+        return *this;
     }
     
-    // Безопасный сброс
+    // Требует специальное подтверждение
+    ValidatedUserBuilder& setAdminWithApproval(bool admin, const std::string& approval_token) {
+        if (admin && approval_token != "SECRET_ADMIN_TOKEN") {
+            throw std::runtime_error("Unauthorized admin access");
+        }
+        is_admin_ = admin;
+        admin_approved_ = true;
+        return *this;
+    }
+    
+    ValidatedUser build() {
+        if (username_.empty() || email_.empty()) {
+            throw std::runtime_error("Required fields missing");
+        }
+        return ValidatedUser(username_, email_, age_, is_admin_);
+    }
+};
+
+void demonstrateValidatedBuilder() {
+    std::cout << "\n=== БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 3: Validation в setters ===\n";
+    
+    ValidatedUserBuilder builder;
+    
+    try {
+        builder.setEmail("invalid-email");
+    } catch (const std::invalid_argument& e) {
+        std::cout << "✅ Блокировано: " << e.what() << "\n";
+    }
+    
+    try {
+        builder.setAdminWithApproval(true, "wrong_token");
+    } catch (const std::runtime_error& e) {
+        std::cout << "✅ Блокировано: " << e.what() << "\n";
+    }
+    
+    auto user = builder
+        .setUsername("alice")
+        .setEmail("alice@example.com")
+        .setAge(25)
+        .build();
+    
+    user.display();
+    std::cout << "✅ Валидация на каждом этапе\n";
+}
+
+// ============================================================================
+// БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 4: BUILDER С НЕВОЗМОЖНОСТЬЮ ПОЛУЧИТЬ PARTIAL OBJECT
+// Решает: Use of Incomplete Objects
+// ============================================================================
+
+class SecureDatabase {
+private:
+    std::string host_;
+    int port_;
+    std::string username_;
+    
+public:
+    SecureDatabase(std::string h, int p, std::string u)
+        : host_(std::move(h)), port_(p), username_(std::move(u)) {}
+    
+    void connect() {
+        std::cout << "✅ Подключено к " << host_ << ":" << port_ 
+                  << " (user: " << username_ << ")\n";
+    }
+};
+
+class SecureDatabaseBuilder {
+private:
+    std::optional<std::string> host_;
+    std::optional<int> port_;
+    std::optional<std::string> username_;
+    
+public:
+    SecureDatabaseBuilder& setHost(const std::string& host) {
+        host_ = host;
+        return *this;
+    }
+    
+    SecureDatabaseBuilder& setPort(int port) {
+        if (port <= 0 || port > 65535) {
+            throw std::invalid_argument("Invalid port");
+        }
+        port_ = port;
+        return *this;
+    }
+    
+    SecureDatabaseBuilder& setUsername(const std::string& user) {
+        username_ = user;
+        return *this;
+    }
+    
+    // Можно получить только полный объект!
+    SecureDatabase build() {
+        if (!host_ || !port_ || !username_) {
+            throw std::runtime_error("Incomplete configuration");
+        }
+        return SecureDatabase(*host_, *port_, *username_);
+    }
+    
+    // НЕТ метода getPartial()!
+};
+
+void demonstrateCompleteObjectOnly() {
+    std::cout << "\n=== БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 4: Только полные объекты ===\n";
+    
+    SecureDatabaseBuilder builder;
+    
+    builder.setHost("localhost");
+    // Не установили порт и username
+    
+    try {
+        auto db = builder.build();  // Вызовет exception
+    } catch (const std::runtime_error& e) {
+        std::cout << "✅ Блокировано: " << e.what() << "\n";
+    }
+    
+    auto db = builder
+        .setPort(5432)
+        .setUsername("admin")
+        .build();
+    
+    db.connect();
+    std::cout << "✅ Объект создан только когда полностью готов\n";
+}
+
+// ============================================================================
+// БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 5: BUILDER С AUTO-RESET
+// Решает: State Pollution
+// ============================================================================
+
+class CleanRequest {
+private:
+    std::string method_;
+    std::string url_;
+    std::vector<std::string> headers_;
+    
+public:
+    CleanRequest(std::string m, std::string u, std::vector<std::string> h)
+        : method_(std::move(m)), url_(std::move(u)), headers_(std::move(h)) {}
+    
+    void display() const {
+        std::cout << method_ << " " << url_ << "\n";
+        for (const auto& h : headers_) std::cout << "  " << h << "\n";
+    }
+};
+
+class CleanRequestBuilder {
+private:
+    std::string method_;
+    std::string url_;
+    std::vector<std::string> headers_;
+    
     void reset() {
-        std::lock_guard<std::mutex> lock(buffer_mutex);
-        buffer.reset();
-        buffer = std::make_unique<std::vector<char>>();
+        method_.clear();
+        url_.clear();
+        headers_.clear();
     }
     
-    ~SecureBuilderV4() {
-        std::cout << "SecureBuilderV4 уничтожен" << std::endl;
+public:
+    CleanRequestBuilder& setMethod(const std::string& method) {
+        method_ = method;
+        return *this;
+    }
+    
+    CleanRequestBuilder& setUrl(const std::string& url) {
+        url_ = url;
+        return *this;
+    }
+    
+    CleanRequestBuilder& addHeader(const std::string& header) {
+        headers_.push_back(header);
+        return *this;
+    }
+    
+    CleanRequest build() {
+        CleanRequest req(method_, url_, headers_);
+        reset();  // Автоматически очищаем state!
+        return req;
     }
 };
 
-// ----------------------------------------------------------------------------
-// ДЕМОНСТРАЦИЯ БЕЗОПАСНЫХ АЛЬТЕРНАТИВ
-// ----------------------------------------------------------------------------
-
-void demonstrateSecureBuilderV1() {
-    std::cout << "\n=== ДЕМОНСТРАЦИЯ SecureBuilderV1 (std::vector) ===" << std::endl;
+void demonstrateCleanBuilder() {
+    std::cout << "\n=== БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 5: Auto-Reset Builder ===\n";
     
-    SecureBuilderV1 builder;
+    CleanRequestBuilder builder;
     
-    // Безопасное добавление данных
-    builder.addData("Hello, ", 7);
-    builder.addString("World!");
+    auto req1 = builder
+        .setMethod("GET")
+        .setUrl("/api/public")
+        .addHeader("Authorization: Bearer token123")
+        .build();
     
-    std::cout << "Размер данных: " << builder.getSize() << std::endl;
+    std::cout << "Запрос 1:\n";
+    req1.display();
     
-    auto data = builder.getData();
-    std::cout << "Данные: ";
-    for (char c : data) {
-        std::cout << c;
-    }
-    std::cout << std::endl;
+    auto req2 = builder
+        .setMethod("POST")
+        .setUrl("/api/admin")
+        .build();
+    
+    std::cout << "\nЗапрос 2:\n";
+    req2.display();
+    
+    std::cout << "\n✅ State автоматически очищен\n";
 }
 
-void demonstrateSecureBuilderV2() {
-    std::cout << "\n=== ДЕМОНСТРАЦИЯ SecureBuilderV2 (std::string) ===" << std::endl;
-    
-    SecureBuilderV2 builder;
-    
-    // Безопасное добавление данных
-    builder.addData("Secure ");
-    builder.addData("Builder ");
-    builder.addData("with std::string");
-    
-    std::cout << "Размер данных: " << builder.getSize() << std::endl;
-    std::cout << "Данные: " << builder.getData() << std::endl;
-}
-
-void demonstrateSecureBuilderV3() {
-    std::cout << "\n=== ДЕМОНСТРАЦИЯ SecureBuilderV3 (с проверкой размеров) ===" << std::endl;
-    
-    SecureBuilderV3 builder(1000); // Максимальный размер 1000 байт
-    
-    // Нормальное добавление
-    bool success1 = builder.addData("Hello", 5);
-    std::cout << "Добавление 'Hello': " << (success1 ? "Успех" : "Неудача") << std::endl;
-    
-    // Попытка превысить лимит
-    std::string largeData(2000, 'A');
-    bool success2 = builder.addData(largeData.c_str(), largeData.length());
-    std::cout << "Добавление больших данных: " << (success2 ? "Успех" : "Неудача") << std::endl;
-    
-    std::cout << "Текущий размер: " << builder.getSize() << std::endl;
-    std::cout << "Максимальный размер: " << builder.getMaxSize() << std::endl;
-}
-
-void demonstrateSecureBuilderV4() {
-    std::cout << "\n=== ДЕМОНСТРАЦИЯ SecureBuilderV4 (RAII) ===" << std::endl;
-    
-    SecureBuilderV4 builder;
-    
-    // Безопасное добавление данных
-    builder.addData("RAII ", 5);
-    builder.addData("Builder", 7);
-    
-    std::cout << "Размер данных: " << builder.getSize() << std::endl;
-    
-    // Безопасный сброс
-    builder.reset();
-    std::cout << "Размер после сброса: " << builder.getSize() << std::endl;
-}
-
-// ----------------------------------------------------------------------------
-// ОСНОВНАЯ ФУНКЦИЯ
-// ----------------------------------------------------------------------------
+// ============================================================================
+// MAIN
+// ============================================================================
 
 int main() {
-    std::cout << "=== ДЕМОНСТРАЦИЯ БЕЗОПАСНЫХ АЛЬТЕРНАТИВ BUILDER ===" << std::endl;
+    std::cout << "=== БЕЗОПАСНЫЕ РЕАЛИЗАЦИИ BUILDER PATTERN ===\n";
     
-    // Демонстрация различных безопасных реализаций
-    demonstrateSecureBuilderV1();
-    demonstrateSecureBuilderV2();
-    demonstrateSecureBuilderV3();
-    demonstrateSecureBuilderV4();
+    demonstrateSafeBoundsChecking();
+    demonstrateSafeOverflowProtection();
+    demonstrateValidatedBuilder();
+    demonstrateCompleteObjectOnly();
+    demonstrateCleanBuilder();
     
-    std::cout << "\n=== РЕКОМЕНДАЦИИ ПО БЕЗОПАСНОСТИ ===" << std::endl;
-    std::cout << "1. Используйте std::vector и std::string вместо сырых указателей" << std::endl;
-    std::cout << "2. Проверяйте размеры перед операциями с памятью" << std::endl;
-    std::cout << "3. Применяйте RAII и умные указатели" << std::endl;
-    std::cout << "4. Используйте мьютексы для многопоточности" << std::endl;
-    std::cout << "5. Валидируйте входные данные" << std::endl;
-    std::cout << "6. Ограничивайте максимальные размеры" << std::endl;
-    std::cout << "7. Регулярно анализируйте код с помощью инструментов безопасности" << std::endl;
+    std::cout << "\n=== РЕКОМЕНДАЦИИ ===\n";
+    std::cout << "✅ Проверяйте границы в каждом setter\n";
+    std::cout << "✅ Защищайтесь от integer overflow\n";
+    std::cout << "✅ Валидируйте на каждом этапе, не только в build()\n";
+    std::cout << "✅ Не позволяйте получить неполный объект\n";
+    std::cout << "✅ Очищайте state после build()\n";
+    std::cout << "✅ Используйте std::string вместо char[]\n";
+    std::cout << "✅ Применяйте std::optional для обязательных полей\n";
     
     return 0;
 }

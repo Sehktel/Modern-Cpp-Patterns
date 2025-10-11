@@ -89,3 +89,4 @@ message(STATUS "Динамический анализ с Valgrind:")
 message(STATUS "  valgrind --tool=helgrind ./{pattern}_vulnerabilities")
 message(STATUS "  valgrind --tool=memcheck ./{pattern}_vulnerabilities")
 
+

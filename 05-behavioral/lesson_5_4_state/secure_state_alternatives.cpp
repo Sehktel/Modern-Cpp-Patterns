@@ -1,145 +1,414 @@
 ﻿#include <iostream>
+#include <memory>
 #include <thread>
 #include <mutex>
-#include <memory>
-#include <vector>
-#include <chrono>
-#include <cstring>
+#include <shared_mutex>
 #include <atomic>
+#include <map>
+#include <set>
+#include <stdexcept>
+
+/**
+ * @file secure_state_alternatives.cpp
+ * @brief Безопасные реализации паттерна State
+ */
 
 // ============================================================================
-// Р‘Р•Р—РћРџРђРЎРќР«Р• РђР›Р¬РўР•Р РќРђРўРР’Р« state
+// БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 1: THREAD-SAFE STATE С МЬЮТЕКСОМ
+// Решает: Race Conditions
 // ============================================================================
 
-// TODO: Р”РѕР±Р°РІРёС‚СЊ РєРѕРјРјРµРЅС‚Р°СЂРёРё РЅР° СЂСѓСЃСЃРєРѕРј СЏР·С‹РєРµ
-// TODO: РЎРѕР·РґР°С‚СЊ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ Р±РµР·РѕРїР°СЃРЅС‹Рµ РІР°СЂРёР°РЅС‚С‹
-// TODO: Р”РѕР±Р°РІРёС‚СЊ С‚РµСЃС‚С‹ Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё
+class IState {
+public:
+    virtual ~IState() = default;
+    virtual void handle() = 0;
+    virtual std::string getName() const = 0;
+};
 
-// ----------------------------------------------------------------------------
-// Р‘Р•Р—РћРџРђРЎРќРђРЇ РђР›Р¬РўР•Р РќРђРўРР’Рђ 1: [РќРђР—Р’РђРќРР• РџРћР”РҐРћР”Рђ]
-// ----------------------------------------------------------------------------
-
-class SecurestateV1 {
-private:
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ Р±РµР·РѕРїР°СЃРЅС‹Рµ РїСЂРёРІР°С‚РЅС‹Рµ С‡Р»РµРЅС‹
-    mutable std::mutex data_mutex;
-    
-    SecurestateV1() {
-        // TODO: Р”РѕР±Р°РІРёС‚СЊ Р±РµР·РѕРїР°СЃРЅС‹Р№ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
-        std::cout << "SecurestateV1 СЃРѕР·РґР°РЅ РІ РїРѕС‚РѕРєРµ " << std::this_thread::get_id() << std::endl;
+class SafeLockedState : public IState {
+public:
+    void handle() override {
+        std::cout << "🔒 Дверь заблокирована (thread-safe)\n";
     }
     
+    std::string getName() const override { return "Locked"; }
+};
+
+class SafeUnlockedState : public IState {
 public:
-    // РЈРґР°Р»СЏРµРј РєРѕРїРёСЂРѕРІР°РЅРёРµ Рё РїСЂРёСЃРІР°РёРІР°РЅРёРµ
-    SecurestateV1(const SecurestateV1&) = delete;
-    SecurestateV1& operator=(const SecurestateV1&) = delete;
+    void handle() override {
+        std::cout << "🔓 Дверь разблокирована (thread-safe)\n";
+    }
     
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ Р±РµР·РѕРїР°СЃРЅС‹Рµ РјРµС‚РѕРґС‹
+    std::string getName() const override { return "Unlocked"; }
+};
+
+// Безопасный Context с мьютексом
+class ThreadSafeContext {
+private:
+    std::unique_ptr<IState> state_;
+    mutable std::mutex mutex_;
     
-    ~SecurestateV1() {
-        // TODO: Р”РѕР±Р°РІРёС‚СЊ Р±РµР·РѕРїР°СЃРЅС‹Р№ РґРµСЃС‚СЂСѓРєС‚РѕСЂ
-        std::cout << "SecurestateV1 СѓРЅРёС‡С‚РѕР¶РµРЅ" << std::endl;
+public:
+    ThreadSafeContext() : state_(std::make_unique<SafeLockedState>()) {}
+    
+    void setState(std::unique_ptr<IState> new_state) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        state_ = std::move(new_state);
+    }
+    
+    void request() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (state_) {
+            state_->handle();
+        }
+    }
+    
+    std::string getStateName() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return state_ ? state_->getName() : "None";
     }
 };
 
-// ----------------------------------------------------------------------------
-// Р‘Р•Р—РћРџРђРЎРќРђРЇ РђР›Р¬РўР•Р РќРђРўРР’Рђ 2: [РќРђР—Р’РђРќРР• РџРћР”РҐРћР”Рђ]
-// ----------------------------------------------------------------------------
-
-class SecurestateV2 {
-private:
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ Р±РµР·РѕРїР°СЃРЅС‹Рµ РїСЂРёРІР°С‚РЅС‹Рµ С‡Р»РµРЅС‹
+void demonstrateThreadSafeState() {
+    std::cout << "\n=== БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 1: Thread-Safe State ===\n";
     
-    SecurestateV2() {
-        // TODO: Р”РѕР±Р°РІРёС‚СЊ Р±РµР·РѕРїР°СЃРЅС‹Р№ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
-        std::cout << "SecurestateV2 СЃРѕР·РґР°РЅ РІ РїРѕС‚РѕРєРµ " << std::this_thread::get_id() << std::endl;
+    ThreadSafeContext context;
+    
+    std::vector<std::thread> threads;
+    
+    // Поток переключения состояний
+    threads.emplace_back([&context]() {
+        for (int i = 0; i < 50; ++i) {
+            context.setState(std::make_unique<SafeUnlockedState>());
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            context.setState(std::make_unique<SafeLockedState>());
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+    });
+    
+    // Потоки использования
+    for (int i = 0; i < 3; ++i) {
+        threads.emplace_back([&context, i]() {
+            for (int j = 0; j < 30; ++j) {
+                std::cout << "Thread " << i << ": ";
+                context.request();
+                std::this_thread::sleep_for(std::chrono::milliseconds(15));
+            }
+        });
+    }
+    
+    for (auto& t : threads) t.join();
+    
+    std::cout << "✅ Нет race conditions - все операции атомарны\n";
+}
+
+// ============================================================================
+// БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 2: STATE MACHINE С ВАЛИДАЦИЕЙ ПЕРЕХОДОВ
+// Решает: Invalid State Transitions
+// ============================================================================
+
+enum class OrderStatus {
+    CREATED,
+    PAID,
+    SHIPPED,
+    DELIVERED,
+    CANCELLED
+};
+
+class SecureOrder {
+private:
+    OrderStatus state_ = OrderStatus::CREATED;
+    double amount_ = 0.0;
+    bool refunded_ = false;
+    std::mutex mutex_;
+    
+    // Определяем допустимые переходы
+    static const std::map<OrderStatus, std::set<OrderStatus>>& getAllowedTransitions() {
+        static std::map<OrderStatus, std::set<OrderStatus>> transitions = {
+            {OrderStatus::CREATED,   {OrderStatus::PAID, OrderStatus::CANCELLED}},
+            {OrderStatus::PAID,      {OrderStatus::SHIPPED, OrderStatus::CANCELLED}},
+            {OrderStatus::SHIPPED,   {OrderStatus::DELIVERED}},
+            {OrderStatus::DELIVERED, {}},  // Финальное состояние
+            {OrderStatus::CANCELLED, {}}   // Финальное состояние
+        };
+        return transitions;
+    }
+    
+    bool isTransitionAllowed(OrderStatus from, OrderStatus to) const {
+        const auto& transitions = getAllowedTransitions();
+        auto it = transitions.find(from);
+        if (it == transitions.end()) return false;
+        return it->second.find(to) != it->second.end();
+    }
+    
+    void transition(OrderStatus new_state) {
+        if (!isTransitionAllowed(state_, new_state)) {
+            throw std::runtime_error(
+                "Invalid transition from " + std::to_string(static_cast<int>(state_)) +
+                " to " + std::to_string(static_cast<int>(new_state))
+            );
+        }
+        state_ = new_state;
     }
     
 public:
-    // РЈРґР°Р»СЏРµРј РєРѕРїРёСЂРѕРІР°РЅРёРµ Рё РїСЂРёСЃРІР°РёРІР°РЅРёРµ
-    SecurestateV2(const SecurestateV2&) = delete;
-    SecurestateV2& operator=(const SecurestateV2&) = delete;
+    void pay(double amount) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        transition(OrderStatus::PAID);
+        amount_ = amount;
+        std::cout << "💳 Оплачено: $" << amount << "\n";
+    }
     
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ Р±РµР·РѕРїР°СЃРЅС‹Рµ РјРµС‚РѕРґС‹
+    void ship() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        transition(OrderStatus::SHIPPED);
+        std::cout << "📦 Отправлено\n";
+    }
     
-    ~SecurestateV2() {
-        // TODO: Р”РѕР±Р°РІРёС‚СЊ Р±РµР·РѕРїР°СЃРЅС‹Р№ РґРµСЃС‚СЂСѓРєС‚РѕСЂ
-        std::cout << "SecurestateV2 СѓРЅРёС‡С‚РѕР¶РµРЅ" << std::endl;
+    void deliver() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        transition(OrderStatus::DELIVERED);
+        std::cout << "✅ Доставлено\n";
+    }
+    
+    void cancel() {
+        std::lock_guard<std::mutex> lock(mutex_);
+        
+        transition(OrderStatus::CANCELLED);
+        
+        if (!refunded_ && amount_ > 0) {
+            std::cout << "💰 Возврат: $" << amount_ << "\n";
+            refunded_ = true;
+        }
+        
+        std::cout << "❌ Отменено\n";
+    }
+    
+    OrderStatus getState() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return state_;
     }
 };
 
-// ----------------------------------------------------------------------------
-// Р‘Р•Р—РћРџРђРЎРќРђРЇ РђР›Р¬РўР•Р РќРђРўРР’Рђ 3: [РќРђР—Р’РђРќРР• РџРћР”РҐРћР”Рђ]
-// ----------------------------------------------------------------------------
+void demonstrateValidatedStateMachine() {
+    std::cout << "\n=== БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 2: Validated State Machine ===\n";
+    
+    SecureOrder order;
+    
+    // Легитимный flow
+    order.pay(100.0);
+    order.ship();
+    order.deliver();
+    
+    std::cout << "\nПопытка недопустимых переходов:\n";
+    
+    // Попытка cancel после delivery
+    try {
+        order.cancel();
+    } catch (const std::runtime_error& e) {
+        std::cout << "✅ Блокировано: " << e.what() << "\n";
+    }
+    
+    // Попытка повторной доставки
+    try {
+        order.deliver();
+    } catch (const std::runtime_error& e) {
+        std::cout << "✅ Блокировано: " << e.what() << "\n";
+    }
+    
+    std::cout << "✅ Все недопустимые переходы заблокированы\n";
+}
 
-class Alternativestate {
+// ============================================================================
+// БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 3: ATOMIC STATE С ENUM
+// Решает: Race Conditions без блокировок
+// ============================================================================
+
+enum class ConnectionState : uint8_t {
+    DISCONNECTED = 0,
+    CONNECTING = 1,
+    CONNECTED = 2,
+    DISCONNECTING = 3
+};
+
+class AtomicConnection {
 private:
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ РїСЂРёРІР°С‚РЅС‹Рµ С‡Р»РµРЅС‹ Р°Р»СЊС‚РµСЂРЅР°С‚РёРІРЅРѕРіРѕ РїРѕРґС…РѕРґР°
+    std::atomic<ConnectionState> state_{ConnectionState::DISCONNECTED};
     
 public:
-    Alternativestate() {
-        // TODO: Р”РѕР±Р°РІРёС‚СЊ РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
-        std::cout << "Alternativestate СЃРѕР·РґР°РЅ" << std::endl;
+    bool connect() {
+        // Атомарное изменение состояния
+        ConnectionState expected = ConnectionState::DISCONNECTED;
+        if (state_.compare_exchange_strong(expected, ConnectionState::CONNECTING)) {
+            std::cout << "🔌 Подключение...\n";
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            
+            state_.store(ConnectionState::CONNECTED, std::memory_order_release);
+            std::cout << "✅ Подключено\n";
+            return true;
+        }
+        
+        std::cout << "❌ Уже подключаемся/подключены\n";
+        return false;
     }
     
-    // РЈРґР°Р»СЏРµРј РєРѕРїРёСЂРѕРІР°РЅРёРµ Рё РїСЂРёСЃРІР°РёРІР°РЅРёРµ
-    Alternativestate(const Alternativestate&) = delete;
-    Alternativestate& operator=(const Alternativestate&) = delete;
+    bool disconnect() {
+        ConnectionState expected = ConnectionState::CONNECTED;
+        if (state_.compare_exchange_strong(expected, ConnectionState::DISCONNECTING)) {
+            std::cout << "🔌 Отключение...\n";
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            
+            state_.store(ConnectionState::DISCONNECTED, std::memory_order_release);
+            std::cout << "✅ Отключено\n";
+            return true;
+        }
+        
+        std::cout << "❌ Не подключены\n";
+        return false;
+    }
     
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ РјРµС‚РѕРґС‹
-    
-    ~Alternativestate() {
-        // TODO: Р”РѕР±Р°РІРёС‚СЊ РґРµСЃС‚СЂСѓРєС‚РѕСЂ
-        std::cout << "Alternativestate СѓРЅРёС‡С‚РѕР¶РµРЅ" << std::endl;
+    ConnectionState getState() const {
+        return state_.load(std::memory_order_acquire);
     }
 };
 
-// ----------------------------------------------------------------------------
-// Р”Р•РњРћРќРЎРўР РђР¦РРЇ Р‘Р•Р—РћРџРђРЎРќР«РҐ РђР›Р¬РўР•Р РќРђРўРР’
-// ----------------------------------------------------------------------------
-
-void demonstrateSecurestateV1() {
-    std::cout << "\n=== Р”Р•РњРћРќРЎРўР РђР¦РРЇ SecurestateV1 ===" << std::endl;
+void demonstrateAtomicState() {
+    std::cout << "\n=== БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 3: Atomic State ===\n";
     
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ РґРµРјРѕРЅСЃС‚СЂР°С†РёСЋ РїРµСЂРІРѕР№ Р±РµР·РѕРїР°СЃРЅРѕР№ Р°Р»СЊС‚РµСЂРЅР°С‚РёРІС‹
+    AtomicConnection conn;
     
-    std::cout << "SecurestateV1 РїСЂРѕРґРµРјРѕРЅСЃС‚СЂРёСЂРѕРІР°РЅ" << std::endl;
+    // Несколько потоков пытаются подключиться
+    std::vector<std::thread> threads;
+    
+    for (int i = 0; i < 5; ++i) {
+        threads.emplace_back([&conn, i]() {
+            std::cout << "Thread " << i << " пытается подключиться\n";
+            conn.connect();  // Только один успешно подключится
+        });
+    }
+    
+    for (auto& t : threads) t.join();
+    
+    conn.disconnect();
+    
+    std::cout << "✅ Atomic CAS гарантирует корректные переходы\n";
 }
 
-void demonstrateSecurestateV2() {
-    std::cout << "\n=== Р”Р•РњРћРќРЎРўР РђР¦РРЇ SecurestateV2 ===" << std::endl;
+// ============================================================================
+// БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 4: STATE С RAII TRANSITIONS
+// Решает: Memory Leaks
+// ============================================================================
+
+class State {
+public:
+    virtual ~State() = default;
+    virtual void enter() = 0;
+    virtual void exit() = 0;
+    virtual std::string getName() const = 0;
+};
+
+class IdleState : public State {
+public:
+    void enter() override {
+        std::cout << "[Idle] Вход в состояние\n";
+    }
     
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ РґРµРјРѕРЅСЃС‚СЂР°С†РёСЋ РІС‚РѕСЂРѕР№ Р±РµР·РѕРїР°СЃРЅРѕР№ Р°Р»СЊС‚РµСЂРЅР°С‚РёРІС‹
+    void exit() override {
+        std::cout << "[Idle] Выход из состояния\n";
+    }
     
-    std::cout << "SecurestateV2 РїСЂРѕРґРµРјРѕРЅСЃС‚СЂРёСЂРѕРІР°РЅ" << std::endl;
+    std::string getName() const override { return "Idle"; }
+    
+    ~IdleState() {
+        std::cout << "[Idle] Удален\n";
+    }
+};
+
+class WorkingState : public State {
+public:
+    void enter() override {
+        std::cout << "[Working] Вход в состояние\n";
+    }
+    
+    void exit() override {
+        std::cout << "[Working] Выход из состояния\n";
+    }
+    
+    std::string getName() const override { return "Working"; }
+    
+    ~WorkingState() {
+        std::cout << "[Working] Удален\n";
+    }
+};
+
+class RAIIStateContext {
+private:
+    std::unique_ptr<State> current_state_;
+    
+public:
+    RAIIStateContext() : current_state_(std::make_unique<IdleState>()) {
+        current_state_->enter();
+    }
+    
+    void transitionTo(std::unique_ptr<State> new_state) {
+        if (current_state_) {
+            current_state_->exit();
+        }
+        
+        current_state_ = std::move(new_state);
+        
+        if (current_state_) {
+            current_state_->enter();
+        }
+    }
+    
+    ~RAIIStateContext() {
+        if (current_state_) {
+            current_state_->exit();
+        }
+    }
+};
+
+void demonstrateRAIIState() {
+    std::cout << "\n=== БЕЗОПАСНАЯ РЕАЛИЗАЦИЯ 4: RAII State Transitions ===\n";
+    
+    RAIIStateContext context;
+    
+    std::cout << "\nПереход в Working:\n";
+    context.transitionTo(std::make_unique<WorkingState>());
+    
+    std::cout << "\nПереход в Idle:\n";
+    context.transitionTo(std::make_unique<IdleState>());
+    
+    std::cout << "\nВыход из scope (автоматический exit):\n";
+    
+    std::cout << "✅ RAII гарантирует вызов enter/exit и удаление\n";
 }
 
-void demonstrateAlternativestate() {
-    std::cout << "\n=== Р”Р•РњРћРќРЎРўР РђР¦РРЇ Alternativestate ===" << std::endl;
-    
-    // TODO: Р”РѕР±Р°РІРёС‚СЊ РґРµРјРѕРЅСЃС‚СЂР°С†РёСЋ Р°Р»СЊС‚РµСЂРЅР°С‚РёРІРЅРѕРіРѕ РїРѕРґС…РѕРґР°
-    
-    std::cout << "Alternativestate РїСЂРѕРґРµРјРѕРЅСЃС‚СЂРёСЂРѕРІР°РЅ" << std::endl;
-}
-
-// ----------------------------------------------------------------------------
-// РћРЎРќРћР’РќРђРЇ Р¤РЈРќРљР¦РРЇ
-// ----------------------------------------------------------------------------
+// ============================================================================
+// MAIN
+// ============================================================================
 
 int main() {
-    std::cout << "=== Р”Р•РњРћРќРЎРўР РђР¦РРЇ Р‘Р•Р—РћРџРђРЎРќР«РҐ РђР›Р¬РўР•Р РќРђРўРР’ state ===" << std::endl;
+    std::cout << "=== БЕЗОПАСНЫЕ РЕАЛИЗАЦИИ STATE PATTERN ===\n";
     
-    // Р”РµРјРѕРЅСЃС‚СЂР°С†РёСЏ СЂР°Р·Р»РёС‡РЅС‹С… Р±РµР·РѕРїР°СЃРЅС‹С… СЂРµР°Р»РёР·Р°С†РёР№
-    demonstrateSecurestateV1();
-    demonstrateSecurestateV2();
-    demonstrateAlternativestate();
+    demonstrateThreadSafeState();
+    demonstrateValidatedStateMachine();
+    demonstrateAtomicState();
+    demonstrateRAIIState();
     
-    std::cout << "\n=== Р Р•РљРћРњР•РќР”РђР¦РР РџРћ Р‘Р•Р—РћРџРђРЎРќРћРЎРўР ===" << std::endl;
-    std::cout << "1. TODO: Р”РѕР±Р°РІРёС‚СЊ РєРѕРЅРєСЂРµС‚РЅС‹Рµ СЂРµРєРѕРјРµРЅРґР°С†РёРё РґР»СЏ РґР°РЅРЅРѕРіРѕ РїР°С‚С‚РµСЂРЅР°" << std::endl;
-    std::cout << "2. TODO: Р РµРєРѕРјРµРЅРґР°С†РёРё РїРѕ Р±РµР·РѕРїР°СЃРЅРѕРјСѓ РїСЂРѕРіСЂР°РјРјРёСЂРѕРІР°РЅРёСЋ" << std::endl;
-    std::cout << "3. TODO: Р›СѓС‡С€РёРµ РїСЂР°РєС‚РёРєРё" << std::endl;
-    std::cout << "4. TODO: РРЅСЃС‚СЂСѓРјРµРЅС‚С‹ Р°РЅР°Р»РёР·Р°" << std::endl;
+    std::cout << "\n=== РЕКОМЕНДАЦИИ ===\n";
+    std::cout << "✅ Используйте мьютексы для защиты state\n";
+    std::cout << "✅ Валидируйте переходы через transition table\n";
+    std::cout << "✅ Используйте std::atomic для простых состояний\n";
+    std::cout << "✅ Применяйте RAII для гарантии enter/exit\n";
+    std::cout << "✅ Используйте unique_ptr для владения state\n";
+    std::cout << "✅ Проверяйте допустимость переходов\n";
+    std::cout << "✅ Тестируйте с ThreadSanitizer\n";
     
     return 0;
 }
-

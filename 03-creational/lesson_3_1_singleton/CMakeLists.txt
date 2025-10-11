@@ -46,6 +46,14 @@ target_compile_options(singleton_vulnerabilities_ubsan PRIVATE -fsanitize=undefi
 target_link_options(singleton_vulnerabilities_ubsan PRIVATE -fsanitize=undefined)
 target_link_libraries(singleton_vulnerabilities_ubsan common)
 
+# Эксплоиты Singleton
+add_executable(singleton_exploits exploits/singleton_exploits.cpp)
+target_link_libraries(singleton_exploits common)
+
+# Безопасные альтернативы Singleton
+add_executable(secure_singleton_alternatives secure_singleton_alternatives.cpp)
+target_link_libraries(secure_singleton_alternatives common)
+
 # ----------------------------------------------------------------------------
 # ИНСТРУКЦИИ ПО ИСПОЛЬЗОВАНИЮ
 # ----------------------------------------------------------------------------
@@ -74,4 +82,5 @@ message(STATUS "")
 message(STATUS "Динамический анализ с Valgrind:")
 message(STATUS "  valgrind --tool=helgrind ./singleton_vulnerabilities")
 message(STATUS "  valgrind --tool=memcheck ./singleton_vulnerabilities")
+
 
