@@ -1,3 +1,22 @@
+/**
+ * @file producer_consumer_cpp23_quick_comparison.cpp
+ * @brief КРАТКОЕ СРАВНЕНИЕ Producer-Consumer Pattern: C++17/20 vs C++23
+ * 
+ * Минималистичный файл для быстрого понимания ключевых отличий C++23.
+ * Показывает только самые важные улучшения без лишних деталей.
+ * 
+ * КЛЮЧЕВЫЕ ОТЛИЧИЯ:
+ * - ❌ std::thread (C++17/20) → ✅ std::jthread (C++23) - auto-join + stop_token
+ * - ❌ bool return (C++17/20) → ✅ std::expected (C++23) - детальные ошибки
+ * 
+ * Компиляция:
+ * - C++17/20: g++ -std=c++20 producer_consumer_cpp23_quick_comparison.cpp
+ * - C++23: g++ -std=c++23 producer_consumer_cpp23_quick_comparison.cpp
+ * 
+ * РАЗМЕР: ~110 строк (для быстрого ознакомления)
+ * 
+ * Для полного изучения см.: producer_consumer_cpp23_full_comparison.cpp
+ */
 
 // C++17/20 vs C++23: Producer-Consumer
 // C++23: std::jthread для auto-join, std::expected для queue operations
