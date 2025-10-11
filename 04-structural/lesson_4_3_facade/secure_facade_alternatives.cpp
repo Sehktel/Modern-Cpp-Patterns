@@ -61,7 +61,7 @@ public:
     }
     
     // Расшифровка данных
-    std::string decryptData(const std::string& encrypted) {
+    std::string decryptData(const std::string& encrypted) const {
         std::string decrypted = encrypted;
         for (char& c : decrypted) {
             c = c ^ 0xAA; // Простое XOR расшифровка

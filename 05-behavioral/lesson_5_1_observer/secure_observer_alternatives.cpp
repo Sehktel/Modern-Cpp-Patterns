@@ -36,7 +36,7 @@ public:
 class SafeSubject {
 private:
     std::vector<std::weak_ptr<IObserver>> observers_;
-    std::mutex mutex_;  // Защита от race conditions
+    mutable std::mutex mutex_;  // Защита от race conditions
     std::string name_;
     
     // Очистка expired weak_ptr

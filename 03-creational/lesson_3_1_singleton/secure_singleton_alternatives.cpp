@@ -53,7 +53,7 @@ public:
     static SecureSingletonV1& getInstance() {
         // Thread-safe инициализация с std::call_once
         std::call_once(init_flag, []() {
-            instance = std::make_unique<SecureSingletonV1>();
+            instance = std::unique_ptr<SecureSingletonV1>(new SecureSingletonV1());
         });
         return *instance;
     }
@@ -273,7 +273,7 @@ private:
     std::vector<uint8_t> adminPassword;
     std::atomic<bool> isAdmin;
     std::atomic<int> userLevel;
-    std::atomic<size_t> accessCount;
+    mutable std::atomic<size_t> accessCount;
     
     SecureSingletonV4() : isAdmin(true), userLevel(999), accessCount(0) {
         // Безопасное хранение пароля
@@ -293,7 +293,7 @@ public:
             std::lock_guard<std::mutex> lock(instance_mutex);
             
             if (!initialized.load()) {
-                instance = std::make_unique<SecureSingletonV4>();
+                instance = std::unique_ptr<SecureSingletonV4>(new SecureSingletonV4());
                 initialized.store(true);
             }
         }
@@ -303,7 +303,7 @@ public:
     
     // Безопасная проверка пароля с защитой от timing attacks
     bool checkAdminAccess(const std::string& password) const {
-        accessCount.fetch_add(1);
+        accessCount.fetch_add(size_t(1));
         
         // Проверка длины
         if (password.length() != adminPassword.size()) {

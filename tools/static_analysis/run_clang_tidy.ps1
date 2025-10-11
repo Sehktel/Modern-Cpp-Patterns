@@ -20,14 +20,19 @@ Write-Host "`n=== Clang-Tidy Static Analysis ===" -ForegroundColor Magenta
 Write-Host "Дата: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`n" -ForegroundColor Gray
 
 # Проверка наличия clang-tidy
-$clangTidyPath = Get-Command clang-tidy -ErrorAction SilentlyContinue
-if (-not $clangTidyPath) {
-    Write-Error-Msg "clang-tidy не найден!"
-    Write-Info "Установите LLVM: https://github.com/llvm/llvm-project/releases"
-    exit 1
+$clangTidy = "C:\Program Files\LLVM\bin\clang-tidy.exe"
+if (-not (Test-Path $clangTidy)) {
+    $clangTidyPath = Get-Command clang-tidy -ErrorAction SilentlyContinue
+    if ($clangTidyPath) {
+        $clangTidy = $clangTidyPath.Source
+    } else {
+        Write-Error-Msg "clang-tidy не найден!"
+        Write-Info "Установите LLVM: https://github.com/llvm/llvm-project/releases"
+        exit 1
+    }
 }
 
-Write-Success "Найден: $($clangTidyPath.Source)"
+Write-Success "Найден: $clangTidy"
 
 # Конфигурация clang-tidy
 $checks = @(
@@ -56,7 +61,7 @@ function Analyze-File {
     
     Write-Info "Анализ: $FilePath"
     
-    $output = & clang-tidy $FilePath $clangTidyArgs 2>&1
+    $output = & $clangTidy $FilePath $clangTidyArgs 2>&1
     $warningCount = ($output | Select-String "warning:" | Measure-Object).Count
     $errorCount = ($output | Select-String "error:" | Measure-Object).Count
     

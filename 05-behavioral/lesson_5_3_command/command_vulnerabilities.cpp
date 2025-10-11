@@ -6,6 +6,8 @@
 #include <sstream>
 #include <fstream>
 #include <map>
+#include <thread>
+#include <chrono>
 
 /**
  * @file command_vulnerabilities.cpp

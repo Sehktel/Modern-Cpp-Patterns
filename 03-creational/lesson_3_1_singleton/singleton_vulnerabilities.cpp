@@ -149,7 +149,7 @@ public:
             instance = new ReferenceCountedSingleton();
         } else {
             // УЯЗВИМОСТЬ: Integer overflow при большом количестве ссылок
-            (*refCount)++;
+            (*instance->refCount)++;
         }
         return instance;
     }

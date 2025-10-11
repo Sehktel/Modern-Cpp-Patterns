@@ -5,6 +5,7 @@
 #include <mutex>
 #include <chrono>
 #include <algorithm>
+#include <functional>
 
 /**
  * @file observer_vulnerabilities.cpp

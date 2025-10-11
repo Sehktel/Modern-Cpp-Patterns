@@ -4,6 +4,7 @@
 #include <mutex>
 #include <chrono>
 #include <atomic>
+#include <vector>
 
 /**
  * @file state_vulnerabilities.cpp
@@ -297,21 +298,19 @@ public:
     }
 };
 
+// Forward declarations
+class GreenState;
+class YellowState;
+
 class RedState : public TrafficLightState {
 public:
-    void next(TrafficLight* light) override {
-        light->setState(new class GreenState());
-    }
-    
+    void next(TrafficLight* light) override;
     std::string getColor() const override { return "RED"; }
 };
 
 class GreenState : public TrafficLightState {
 public:
-    void next(TrafficLight* light) override {
-        light->setState(new class YellowState());
-    }
-    
+    void next(TrafficLight* light) override;
     std::string getColor() const override { return "GREEN"; }
 };
 
@@ -323,6 +322,15 @@ public:
     
     std::string getColor() const override { return "YELLOW"; }
 };
+
+// Реализация отложенных методов
+void RedState::next(TrafficLight* light) {
+    light->setState(new GreenState());
+}
+
+void GreenState::next(TrafficLight* light) {
+    light->setState(new YellowState());
+}
 
 TrafficLight::TrafficLight() : state_(new RedState()) {}
 

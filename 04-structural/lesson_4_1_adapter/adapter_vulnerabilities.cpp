@@ -230,8 +230,8 @@ void demonstrateTypeConfusion() {
         std::cout << "Получен как char: " << *charObj << std::endl;
     }
     
-    // УЯЗВИМОСТЬ: Получаем как указатель
-    void** ptrObj = adapter.getAdapted<void**>();
+    // УЯЗВИМОСТЬ: Получаем как указатель (type confusion)
+    void** ptrObj = static_cast<void**>(adapter.getAdapted<void*>());
     if (ptrObj) {
         std::cout << "Получен как указатель: " << ptrObj << std::endl;
     }

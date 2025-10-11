@@ -7,6 +7,7 @@
 #include <map>
 #include <set>
 #include <stdexcept>
+#include <vector>
 
 /**
  * @file secure_state_alternatives.cpp
@@ -121,7 +122,7 @@ private:
     OrderStatus state_ = OrderStatus::CREATED;
     double amount_ = 0.0;
     bool refunded_ = false;
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     
     // Определяем допустимые переходы
     static const std::map<OrderStatus, std::set<OrderStatus>>& getAllowedTransitions() {

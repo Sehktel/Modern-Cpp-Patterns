@@ -9,6 +9,7 @@
 #include <sstream>
 #include <regex>
 #include <set>
+#include <fstream>
 
 /**
  * @file secure_command_alternatives.cpp

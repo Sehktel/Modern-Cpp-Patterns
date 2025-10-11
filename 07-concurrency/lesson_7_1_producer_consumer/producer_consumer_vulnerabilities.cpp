@@ -4,6 +4,8 @@
 #include <chrono>
 #include <vector>
 #include <atomic>
+#include <mutex>
+#include <condition_variable>
 #include <cstring>
 
 /**
@@ -297,7 +299,7 @@ void demonstrateUseAfterFree() {
 class UnboundedQueue {
 private:
     std::queue<std::vector<char>> queue_;  // Может расти бесконечно
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     std::condition_variable cv_;
     
 public:
